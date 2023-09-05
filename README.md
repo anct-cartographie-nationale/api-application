@@ -23,25 +23,6 @@ Cette API donne accès aux données de l'offre de médiation numérique destiné
 
 > Node peut être installés via [nvm](https://github.com/nvm-sh/nvm) qui permet d'obtenir et d'utiliser rapidement différentes versions de Node via la ligne de commande.
 
-## Installation
-
-### Installer Husky
-
-[Husky](https://typicode.github.io/husky) est un outil de gestion des hooks git pour effectuer des tâches automatiques
-
-Mise en place de Husky :
-
-```bash
-npx husky install
-```
-
-Rendre exécutable les fichiers qui contiennent les hooks :
-
-```bash
-chmod a+x .husky/commit-msg
-chmod a+x .husky/pre-commit
-```
-
 ## Utilisation
 
 Ces commandes servent dans un contexte de développement de l'application et doivent être exécutées depuis la racine du projet.
