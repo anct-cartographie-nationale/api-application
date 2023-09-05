@@ -127,7 +127,7 @@ Lorsqu'une branche est fusionnée avec `main`, cela déclenche automatiquement l
 - [AWS](https://aws.amazon.com/) est la plateforme de services Cloud proposée par Amazon.
   - Compte de déploiement : `cartographie-nationale.api.ci`
   - Groupe : `publisher.api`
-  - Environnement cible : https://d2pzn8br7bs1l.cloudfront.net/api/
+  - Environnement cible : https://cartographie.societenumerique.gouv.fr/api/
 
 ## Gestion des versions
 
