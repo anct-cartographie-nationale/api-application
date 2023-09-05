@@ -37,15 +37,15 @@ Exécuter `pnpm test` pour tester le projet.
 
 ### ESLint
 
-Exécuter `pnpm lint` pour une analyse statique des fichiers `.ts` du projet.
+Exécuter `pnpm lint.es` pour une analyse statique des fichiers `.ts` du projet.
 
 ### Commit lint
 
-Exécuter `pnpm commitlint --from HEAD~1` pour valider la syntaxe du dernier commit.
+Exécuter `pnpm lint.commit` pour valider la syntaxe du dernier commit.
 
 ### Prettier
 
-Exécuter `pnpm prettier-fix` pour mettre à niveau la syntaxe de l'ensemble des fichiers du projet.
+Exécuter `pnpm prettier` pour mettre à niveau la syntaxe de l'ensemble des fichiers du projet.
 
 ### OpenAPI
 
