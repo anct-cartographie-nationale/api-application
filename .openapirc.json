@@ -1,0 +1,18 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "API des lieux d'inclusion numérique",
+    "version": "0.0.0",
+    "description": "Cette API donne accès aux données de l'offre d'inclusion numérique destinée à un affichage dans la cartographie nationale de l’offre d'inclusion numérique : https://cartographie.societenumerique.gouv.fr.",
+    "license": {
+      "name": "Etalab Open License 2.0",
+      "url": "https://spdx.org/licenses/etalab-2.0.html"
+    },
+    "contact": {
+      "name": "Cartographie nationale des lieux d'inclusion numérique",
+      "email": "cartographie.sonum@anct.gouv.fr"
+    }
+  },
+  "servers": [],
+  "paths": {}
+}

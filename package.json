@@ -1,0 +1,59 @@
+{
+  "name": "api-application",
+  "version": "0.0.1",
+  "description": "⚡ API pour la consultation et le traitement de l’offre d'inclusion numérique.",
+  "keywords": [
+    "api",
+    "serverless",
+    "gouvernement",
+    "betagouv",
+    "cartographie",
+    "anct",
+    "médiation numérique"
+  ],
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest",
+    "lint.es": "eslint",
+    "lint.commit": "commitlint --from origin/main",
+    "lint.staged": "lint-staged",
+    "prettier": "prettier --write ./src/",
+    "prettier.ci": "prettier --check ./src/",
+    "openapi": "swagger-jsdoc -d .openapirc.json ./src/infrastructure/routes/**/*.route.ts ./src/infrastructure/transfers/*.transfer.ts -o openapi.json",
+    "prepare": "husky install"
+  },
+  "license": "SEE LICENSE IN LICENSE.md",
+  "contributors": [
+    {
+      "name": "Marc Gavanier",
+      "email": "marc.gavanier@gmail.com",
+      "url": "https://www.linkedin.com/in/marc-gavanier/"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anct-cartographie-nationale/api-application.git"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^17.7.1",
+    "@commitlint/config-conventional": "^17.7.0",
+    "@types/aws-lambda": "^8.10.119",
+    "@types/glob": "^8.1.0",
+    "@types/node": "^20.5.9",
+    "@typescript-eslint/eslint-plugin": "^6.5.0",
+    "@typescript-eslint/parser": "^6.5.0",
+    "eslint": "^8.48.0",
+    "eslint-plugin-vitest": "^0.3.1",
+    "husky": "^8.0.3",
+    "lint-staged": "^14.0.1",
+    "prettier": "^3.0.3",
+    "rollup": "^3.28.1",
+    "swagger-jsdoc": "^6.2.8",
+    "ts-loader": "^9.4.4",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2",
+    "vite": "^4.4.9",
+    "vitest": "^0.34.3"
+  }
+}
