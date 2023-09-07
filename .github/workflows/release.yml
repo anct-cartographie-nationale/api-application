@@ -67,13 +67,16 @@ jobs:
           name: build
           path: build
 
-      - name: Fetch Latest Release
+      - name: Fetch latest release version
         id: fetch-latest-release
-        uses: gregziegan/fetch-latest-release@v2
+        uses: reloc8/action-latest-release-version@1.0.0
+
+      - name: Test
+        run: echo ${{ steps.fetch-latest-release.outputs.latest-release }}
 
       - name: Set Major Version
         id: set-major-version
-        run: echo "MAJOR_VERSION=$(echo ${{ steps.fetch-latest-release.outputs.tag_name }} | cut -d 'v' -f 2 | cut -d '.' -f 1)" >> $GITHUB_ENV
+        run: echo "MAJOR_VERSION=$(echo ${{ steps.fetch-latest-release.outputs.latest-release }} | cut -d 'v' -f 2 | cut -d '.' -f 1)" >> $GITHUB_ENV
 
       - name: List files
         run: |
