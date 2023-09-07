@@ -69,19 +69,11 @@ jobs:
 
       - name: Fetch latest release version
         id: fetch-latest-release
-        uses: fangqiuming/latest-release-version@v1.x
-
-      - name: Test
-        run: echo ${{ steps.fetch-latest-release.outputs.tag_name }}
+        uses: fangqiuming/latest-release-version@v1.2
 
       - name: Set Major Version
         id: set-major-version
-        run: echo "MAJOR_VERSION=$(echo ${{ steps.fetch-latest-release.outputs.tag_name }} | cut -d 'v' -f 2 | cut -d '.' -f 1)" >> $GITHUB_ENV
-
-      - name: List files
-        run: |
-          echo Publishing $MAJOR_VERSION
-          ls -la
+        run: echo "MAJOR_VERSION=$(echo ${{ steps.fetch-latest-release.outputs.tag_name }} | cut -d '.' -f 1)" >> $GITHUB_ENV
 
       - name: Deploy
         uses: jakejarvis/s3-sync-action@master
