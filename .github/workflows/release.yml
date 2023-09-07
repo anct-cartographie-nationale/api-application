@@ -86,14 +86,6 @@ jobs:
           SOURCE_DIR: 'build'
           DEST_DIR: $MAJOR_VERSION
 
-      - name: Deploy API Gateway
-        uses: codingones/github-actions-workflows/.github/workflows/apply.terraform.yml@main
-        with:
-          infrastructure-repository: 'anct-cartographie-nationale/api-infrastructure'
-          workspace-name: 'api-infrastructure'
-        secrets:
-          TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
-
   deploy:
     name: Deploy API Gateway
     needs: publish
