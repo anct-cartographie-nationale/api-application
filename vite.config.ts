@@ -1,4 +1,3 @@
-import { OutputPluginOption, RenderedChunk } from 'rollup';
 import { defineConfig } from 'vite';
 import * as glob from 'glob';
 import * as path from 'path';
@@ -24,17 +23,6 @@ const getRoutesEntries = (): FilesInputOption =>
     {}
   );
 
-const fileNameWithoutPath = (fileName: string): string =>
-  ((fileNameParts: string[]): string => `${fileNameParts[fileNameParts.length - 1]}`)(fileName.split('/'));
-
-const renameFiles: OutputPluginOption = {
-  name: 'rename-files',
-  renderChunk(_: string, chunk: RenderedChunk): void {
-    if (chunk.type !== 'chunk') return;
-    chunk.fileName = fileNameWithoutPath(chunk.fileName);
-  }
-};
-
 export default defineConfig({
   build: {
     outDir: 'dist',
@@ -45,8 +33,7 @@ export default defineConfig({
     rollupOptions: {
       input: getRoutesEntries(),
       output: {
-        entryFileNames: '[name].js',
-        plugins: [renameFiles]
+        entryFileNames: '[name].mjs'
       }
     }
   }
