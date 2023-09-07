@@ -69,7 +69,7 @@ jobs:
 
       - name: Fetch Latest Release
         id: fetch-latest-release
-        uses: thebritican/fetch-latest-release@v1
+        uses: gregziegan/fetch-latest-release@v2
 
       - name: Set Major Version
         id: set-major-version
