@@ -65,10 +65,19 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: build
+          path: build
+
+      - name: Fetch Latest Release
+        id: fetch-latest-release
+        uses: thebritican/fetch-latest-release@v1
+
+      - name: Set Major Version
+        id: set-major-version
+        run: echo "MAJOR_VERSION=$(echo ${{ steps.fetch-latest-release.outputs.tag_name }} | cut -d 'v' -f 2 | cut -d '.' -f 1)" >> $GITHUB_ENV
 
       - name: List files
         run: |
-          echo Publishing $RELEASE_VERSION
+          echo Publishing $MAJOR_VERSION
           ls -la
 
       - name: Deploy
@@ -80,4 +89,4 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           SOURCE_DIR: 'build'
-          DEST_DIR: 'v0'
+          DEST_DIR: $MAJOR_VERSION
