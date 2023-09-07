@@ -36,7 +36,7 @@ export const handler = async (): Promise<APIGatewayProxyResultV2> => {
       telephone: '01 80 05 98 80',
       courriel: 'contact@laquincaillerie.tl',
       site_web: 'https://www.laquincaillerie.tl/',
-      horaires: 'Mo-Fr 09:00-12:00,14:00-18:30; Sa 08:30-12:00',
+      horaires: 'Mo-Fr 09:00-12:00,14:00-18:30; Sa 08:30-13:30',
       presentation_resumee: 'Notre association propose des formations aux outils numériques à destination des personnes âgées.',
       presentation_detail:
         'Notre parcours d’initiation permet l’acquisition de compétences numériques de base. Nous proposons également un accompagnement à destination des personnes déjà initiées qui souhaiteraient approfondir leurs connaissances. Du matériel informatique est en libre accès pour nos adhérents tous les après-midis. En plus de d’accueillir les personnes dans notre lieu en semaine (sur rendez-vous), nous assurons une permanence le samedi matin dans la médiathèque XX.',
