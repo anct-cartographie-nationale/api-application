@@ -75,7 +75,7 @@ jobs:
         id: set-major-version
         run: echo "MAJOR_VERSION=$(echo ${{ steps.fetch-latest-release.outputs.tag_name }} | cut -d '.' -f 1)" >> $GITHUB_ENV
 
-      - name: Deploy
+      - name: Publish on S3
         uses: jakejarvis/s3-sync-action@master
         with:
           args: --delete
@@ -85,3 +85,10 @@ jobs:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
           SOURCE_DIR: 'build'
           DEST_DIR: $MAJOR_VERSION
+
+      - name: Deploy API Gateway
+        uses: taiidani/terraform-cloud-action@v0.0.2
+        with:
+          tfe-token: ${{ secrets.TF_API_TOKEN }}
+          organization: 'cartographie-nationale'
+          workspace: 'api-production'
