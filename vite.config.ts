@@ -31,6 +31,7 @@ export default defineConfig({
       formats: ['es']
     },
     rollupOptions: {
+      external: /^@aws-sdk/,
       input: getRoutesEntries(),
       output: {
         entryFileNames: '[name].mjs'

@@ -57,5 +57,10 @@
     "typescript": "^5.2.2",
     "vite": "^4.4.9",
     "vitest": "^0.34.3"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.409.0",
+    "@aws-sdk/lib-dynamodb": "^3.409.0",
+    "@gouvfr-anct/lieux-de-mediation-numerique": "^1.19.0"
   }
 }
