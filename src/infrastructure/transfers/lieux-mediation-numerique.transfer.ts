@@ -96,7 +96,7 @@ type Typologie =
  *           type: string
  *           description: Les jours et horaires d’ouverture du lieu, en respectant le format proposé par OpenStreetMap (https://wiki.openstreetmap.org/wiki/FR:Key:opening_hours).
  *           example: Mo-Fr 09:00-12:00,14:00-18:30; Sa 08:30-12:00
- *         presentation_resumee:
+ *         presentation_resume:
  *           type: string
  *           description: Courte description du lieu.
  *           example: Notre association propose des formations aux outils numériques à destination des personnes âgées.
@@ -133,7 +133,7 @@ type Typologie =
  *             - Accéder à du matériel \
  *             - Créer et développer mon entreprise
  *           example: Gagner en autonomie dans les démarches administratives, Etre accompagné dans les démarches administratives, Prendre en main un smartphone ou une tablette, Prendre en main un ordinateur, Utiliser le numérique au quotidien, Approfondir ma culture numérique
- *         publics:
+ *         publics_accueillis:
  *           type: string
  *           description: |
  *             Les types de publics que le lieu est en mesure d’accueillir. \
@@ -150,7 +150,7 @@ type Typologie =
  *             - Uniquement femmes \
  *             - Personnes en situation d’illettrisme
  *           example: Familles/enfants, Adultes, Déficience visuelle
- *         modalites_access:
+ *         conditions_acces:
  *           type: string
  *           description: |
  *             Conditions d’accès au lieu. \
@@ -185,7 +185,7 @@ type Typologie =
  *             - Dans un atelier \
  *             - A ma place
  *           example: SudLabs, Nièvre médiation numérique
- *         types_accompagnement:
+ *         modalites_accompagnement:
  *           type: string
  *           description: Le ou les autres labels (régionaux, locaux…) obtenus par le lieu.
  *           example: Seul, Avec de l’aide
@@ -213,17 +213,17 @@ export interface LieuxMediationNumeriqueTransfer {
   courriel?: string;
   site_web?: string;
   horaires?: string;
-  presentation_resumee?: string;
+  presentation_resume?: string;
   presentation_detail?: string;
   source?: string;
   structure_parente?: string;
   date_maj?: string;
   services: string;
-  publics?: string;
-  modalites_access?: string;
+  publics_accueillis?: string;
+  conditions_acces?: string;
   labels_nationaux?: string;
   labels_autres?: string;
-  types_accompagnement?: string;
+  modalites_accompagnement?: string;
   accessibilite?: string;
   prise_rdv?: string;
 }
