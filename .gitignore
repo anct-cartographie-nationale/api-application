@@ -6,6 +6,9 @@
 /out-tsc
 /bazel-out
 
+# Docs
+redoc-static.html
+
 # Logs
 logs
 *.log
