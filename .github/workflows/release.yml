@@ -86,7 +86,7 @@ jobs:
 
       - name: Update openapirc.json with latest release version
         run: |
-          VERSION="${{ steps.fetch-latest-release.outputs.tag_name }#v}"
+          VERSION="${{ steps.fetch-latest-release.outputs.tag_name#v }}"
           jq --arg version "$VERSION" '.info.version = $version' .openapirc.json > .openapirc.updated.json
           mv .openapirc.updated.json .openapirc.json
 
@@ -95,6 +95,12 @@ jobs:
 
       - name: Build Documentation
         run: pnpm build.openapi-doc
+
+      - name: Move doc to major version folder
+        run: |
+          MAJOR_VERSION=$(echo ${{ steps.fetch-latest-release.outputs.tag_name }} | cut -d '.' -f 1)
+          mkdir -p dist/$MAJOR_VERSION
+          mv dist/index.html dist/$MAJOR_VERSION
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v3
