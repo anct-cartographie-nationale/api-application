@@ -86,7 +86,8 @@ jobs:
 
       - name: Update openapirc.json with latest release version
         run: |
-          VERSION="${{ steps.fetch-latest-release.outputs.tag_name#v }}"
+          VERSION="${{ steps.fetch-latest-release.outputs.tag_name }}"
+          VERSION="${VERSION#v}"
           jq --arg version "$VERSION" '.info.version = $version' .openapirc.json > .openapirc.updated.json
           mv .openapirc.updated.json .openapirc.json
 
