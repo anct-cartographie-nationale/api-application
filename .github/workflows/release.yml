@@ -58,8 +58,9 @@ jobs:
           path: dist
 
   doc:
-    name: PublishDoc
+    name: Generate documentation
     runs-on: ubuntu-latest
+    needs: build
 
     steps:
       - name: Checkout repository
@@ -79,16 +80,51 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: BuildOpenApi
+      - name: Fetch latest release version
+        id: fetch-latest-release
+        uses: fangqiuming/latest-release-version@v1.2
+
+      - name: Update openapirc.json with latest release version
+        run: |
+          VERSION="${{ steps.fetch-latest-release.outputs.tag_name }#v}"
+          jq --arg version "$VERSION" '.info.version = $version' .openapirc.json > .openapirc.updated.json
+          mv .openapirc.updated.json .openapirc.json
+
+      - name: Build OpenApi
         run: pnpm build.openapi
 
-      - name: BuildDoc
+      - name: Build Documentation
         run: pnpm build.openapi-doc
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: doc
+          path: dist
+
+  publish-doc:
+    name: Publish documentation
+    needs: doc
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
+        with:
+          artifact_name: doc
 
   publish:
     name: Publish
     runs-on: ubuntu-latest
     needs: build
+
     steps:
       - name: Download build
         uses: actions/download-artifact@v3
