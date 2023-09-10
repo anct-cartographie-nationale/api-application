@@ -72,7 +72,7 @@ jobs:
         run: pnpm lint.es
 
   openapilint:
-    name: OpenAPILint
+    name: OpenAPI Lint
     runs-on: ubuntu-latest
 
     steps:
@@ -93,14 +93,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: BuildOpenApi
+      - name: Build OpenApi
         run: pnpm build.openapi
 
       - name: Lint
         run: pnpm lint.openapi
 
   commitlint:
-    name: CommitLint
+    name: Commit Lint
     runs-on: ubuntu-latest
 
     steps:
