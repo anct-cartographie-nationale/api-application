@@ -14,13 +14,16 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "vite build",
+    "build.openapi": "swagger-jsdoc -d .openapirc.json ./src/infrastructure/routes/**/*.route.ts ./src/infrastructure/transfers/*.transfer.ts -o openapi.json",
+    "build.openapi-doc": "pnpm redocly build-docs openapi.json -o dist/redoc.html",
     "test": "vitest",
     "lint.es": "eslint",
     "lint.commit": "commitlint --from origin/main",
     "lint.staged": "lint-staged",
+    "lint.openapi": "redocly lint openapi.json",
     "prettier": "prettier --write ./src/",
     "prettier.ci": "prettier --check ./src/",
-    "openapi": "swagger-jsdoc -d .openapirc.json ./src/infrastructure/routes/**/*.route.ts ./src/infrastructure/transfers/*.transfer.ts -o openapi.json",
+    "watch.openapi-doc": "redocly preview-docs openapi.json",
     "prepare": "husky install"
   },
   "license": "SEE LICENSE IN LICENSE.md",
@@ -38,6 +41,7 @@
   "devDependencies": {
     "@commitlint/cli": "^17.7.1",
     "@commitlint/config-conventional": "^17.7.0",
+    "@redocly/cli": "^1.0.2",
     "@types/aws-lambda": "^8.10.119",
     "@types/glob": "^8.1.0",
     "@types/node": "^20.5.9",
