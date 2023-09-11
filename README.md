@@ -2,7 +2,7 @@
 
 <h2 id="à-propos">🪧 À propos</h2>
 
-Bienvenue dans l'API des lieux d'inclusion numérique !
+Bienvenue dans l'API des lieux d'inclusion numérique ! \
 Cette API fournit un accès aux données de l'offre d'inclusion numérique. Elle est compatible avec un affichage dans la [cartographie nationale des lieux d'inclusion numérique](https://cartographie.societenumerique.gouv.fr/cartographie/).
 Mais elle offre surtout un moyen simple et efficace d'interagir avec les informations clés sur les lieux d'inclusion numérique en France.
 
@@ -16,11 +16,11 @@ Mais elle offre surtout un moyen simple et efficace d'interagir avec les informa
 
 <h2 id="acces">🌐 Accès à l'api</h2>
 
-L'API des lieux d'inclusion numérique est disponible sur : https://cartographie.societenumerique.gouv.fr/api/v0/lieux-inclusion-numerique
+L'API des lieux d'inclusion numérique est disponible sur : https://cartographie.societenumerique.gouv.fr/api/v0/lieux-inclusion-numerique.
 
 <h2 id="documentation">📚 Documentation</h2>
 
-La documentation de l'API au format OpenAPI est disponible en ligne : https://anct-cartographie-nationale.github.io/api-application/v0/
+La documentation de l'API au format OpenAPI est disponible en ligne : https://anct-cartographie-nationale.github.io/api-application/v0/.
 
 <h2 id="contribution">🤗 Contribution</h2>
 
