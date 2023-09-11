@@ -15,15 +15,15 @@
   "scripts": {
     "build": "vite build",
     "build.openapi": "swagger-jsdoc -d .openapirc.json ./src/infrastructure/routes/**/*.route.ts ./src/infrastructure/transfers/*.transfer.ts -o openapi.json",
-    "build.openapi-doc": "pnpm redocly build-docs openapi.json -o dist/index.html",
+    "build.openapi-doc": "pnpm build.openapi && pnpm redocly build-docs openapi.json -o dist/index.html",
     "test": "vitest",
     "lint.es": "eslint",
     "lint.commit": "commitlint --from origin/main",
     "lint.staged": "lint-staged",
-    "lint.openapi": "redocly lint openapi.json",
+    "lint.openapi": "pnpm build.openapi && redocly lint openapi.json",
     "prettier": "prettier --write ./src/",
     "prettier.ci": "prettier --check ./src/",
-    "watch.openapi-doc": "redocly preview-docs openapi.json",
+    "watch.openapi-doc": "pnpm build.openapi && redocly preview-docs openapi.json",
     "prepare": "husky install"
   },
   "license": "SEE LICENSE IN LICENSE.md",

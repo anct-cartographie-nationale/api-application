@@ -93,9 +93,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build OpenApi
-        run: pnpm build.openapi
-
       - name: Lint
         run: pnpm lint.openapi
 
