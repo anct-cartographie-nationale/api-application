@@ -28,4 +28,4 @@ Pour contribuer à l'API, nous vous invitons à consulter le [guide de contribut
 
 <h2 id="licence">📝 Licence</h2>
 
-Voir le fichier [LICENSE.md](./LICENSE.md) du dépôt.
+Voir le fichier [LICENSE](./LICENSE) du dépôt.
