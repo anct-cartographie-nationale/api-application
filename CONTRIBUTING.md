@@ -26,13 +26,13 @@ Suivez ces étapes pour configurer le projet :
 ### 1. Clonez le dépôt
 
 ```bash
-git clone git@github.com:marc-gavanier/clean-react-tic-tac-toe.git
+git clone git@github.com:anct-cartographie-nationale/api-application.git
 ```
 
 ### 2. Installez les dépendances du projet
 
 ```bash
-cd clean-react-tic-tac-toe
+cd api-application
 pnpm install
 ```
 
