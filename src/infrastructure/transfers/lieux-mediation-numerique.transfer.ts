@@ -181,7 +181,7 @@ type Typologie =
  *           example: France Services;APTIC;Point relais CAF
  *         labels_autres:
  *           type: string
- *           description: AAutres labels associés au lieu.
+ *           description: Autres labels associés au lieu.
  *           example: SudLabs;Nièvre médiation numérique
  *         modalites_accompagnement:
  *           type: string
