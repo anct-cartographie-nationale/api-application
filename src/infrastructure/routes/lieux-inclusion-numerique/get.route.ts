@@ -1,7 +1,7 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, ScanCommand, ScanCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { APIGatewayProxyResultV2 } from 'aws-lambda';
-import { LieuMediationNumerique, toSchemaLieuxDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
+import { toSchemaLieuxDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
+import { scanAll } from '../../dynamo-db';
+import { gzipedSuccessResponse } from '../../responses';
 
 /**
  * @openapi
@@ -26,30 +26,5 @@ import { LieuMediationNumerique, toSchemaLieuxDeMediationNumerique } from '@gouv
  *                   items:
  *                     $ref: '#/components/schemas/LieuMediationNumerique'
  */
-export const handler = async (): Promise<APIGatewayProxyResultV2> => {
-  const client: DynamoDBClient = new DynamoDBClient();
-  const docClient: DynamoDBDocumentClient = DynamoDBDocumentClient.from(client);
-
-  const lieuxMediationNumerique: LieuMediationNumerique[] = [];
-  let ExclusiveStartKey: Record<string, LieuMediationNumerique> | undefined;
-
-  do {
-    const scanCommand: ScanCommand = new ScanCommand({
-      TableName: 'LieuxInclusionNumerique',
-      ...(ExclusiveStartKey ? { ExclusiveStartKey } : {})
-    });
-
-    const dynamoDBResponse: ScanCommandOutput = await docClient.send(scanCommand);
-    lieuxMediationNumerique.push(...((dynamoDBResponse.Items ?? []) as LieuMediationNumerique[]));
-
-    ExclusiveStartKey = dynamoDBResponse.LastEvaluatedKey;
-  } while (ExclusiveStartKey);
-
-  return {
-    statusCode: 200,
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(toSchemaLieuxDeMediationNumerique(lieuxMediationNumerique))
-  };
-};
+export const handler = async (): Promise<APIGatewayProxyResultV2> =>
+  gzipedSuccessResponse(toSchemaLieuxDeMediationNumerique(await scanAll('LieuxInclusionNumerique')));
