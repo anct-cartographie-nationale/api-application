@@ -148,13 +148,14 @@ jobs:
         run: echo "MAJOR_VERSION=$(echo ${{ steps.fetch-latest-release.outputs.tag_name }} | cut -d '.' -f 1)" >> $GITHUB_ENV
 
       - name: Publish on S3
-        uses: jakejarvis/s3-sync-action@master
+        uses: kersvers/s3-sync-with-cloudfront-invalidation@v1.0.0
         with:
           args: --delete
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          DISTRIBUTION_ID: ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
           SOURCE_DIR: 'build'
           DEST_DIR: $MAJOR_VERSION
 
