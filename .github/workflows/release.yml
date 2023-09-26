@@ -134,33 +134,34 @@ jobs:
 
     steps:
       - name: Download build
+        id: publish-download-build
         uses: actions/download-artifact@v3
         with:
           name: build
           path: build
 
       - name: Fetch latest release version
-        id: fetch-latest-release
+        id: publish-fetch-latest-release-version
         uses: fangqiuming/latest-release-version@v1.2
 
       - name: Set Major Version
-        id: set-major-version
+        id: publish-set-major-version
         run: echo "MAJOR_VERSION=$(echo ${{ steps.fetch-latest-release.outputs.tag_name }} | cut -d '.' -f 1)" >> $GITHUB_ENV
 
       - name: Publish on S3
-        uses: kersvers/s3-sync-with-cloudfront-invalidation@v1.0.0
+        id: publish-publish-on-s3
+        uses: jakejarvis/s3-sync-action@master
         with:
           args: --delete
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-          DISTRIBUTION_ID: ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
           SOURCE_DIR: 'build'
           DEST_DIR: $MAJOR_VERSION
 
   deploy:
-    name: Deploy API Gateway
+    name: Update API Gateway
     needs: publish
     uses: codingones/github-actions-workflows/.github/workflows/apply.terraform.yml@main
     with:
@@ -168,3 +169,22 @@ jobs:
       workspace-name: 'api-production'
     secrets:
       TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+
+  reset-cache:
+    name: Reset Cache
+    runs-on: ubuntu-latest
+    needs: deploy
+
+    steps:
+      - name: Invalidate CloudFront
+        id: reset-cache-invalidate-cloudfront
+        uses: chetan/invalidate-cloudfront-action@v2
+        env:
+          DISTRIBUTION: ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
+          PATHS: '/*'
+          AWS_REGION: 'us-east-1'
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Refresh lieux mediation numerique
+        id: reset-cache-refresh-lieux-mediation-numerique
+        run: curl -H "Accept-Encoding:gzip, br" https://cartographie.societenumerique.gouv.fr/api/v0/lieux-inclusion-numerique
