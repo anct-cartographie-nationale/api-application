@@ -148,6 +148,10 @@ jobs:
         id: publish-set-major-version
         run: echo "MAJOR_VERSION=$(echo ${{ steps.fetch-latest-release.outputs.tag_name }} | cut -d '.' -f 1)" >> $GITHUB_ENV
 
+      - name: Display Major Version
+        id: publish-display-major-version
+        run: echo $MAJOR_VERSION
+
       - name: Publish on S3
         id: publish-publish-on-s3
         uses: jakejarvis/s3-sync-action@master
