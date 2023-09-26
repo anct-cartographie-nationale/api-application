@@ -16,32 +16,39 @@ jobs:
 
     steps:
       - name: Checkout repository
+        id: build-checkout-repository
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
           persist-credentials: false
 
       - name: Prepare release
+        id: build-prepare-realise
         uses: mgoltzsche/conventional-release@v0
 
       - name: Install pnpm
+        id: build-install-pnpm
         uses: pnpm/action-setup@v2
         with:
           version: 8.6.7
 
       - name: Set up Node.js
+        id: build-set-up-nodejs
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'
           cache: 'pnpm'
 
       - name: Install dependencies
+        id: build-install-dependencies
         run: pnpm install
 
       - name: Build
+        id: build-build
         run: pnpm build
 
-      - name: Prepare and Zip .mjs files
+      - name: Prepare and Zip build files
+        id: build-prepare-and-zip-build-files
         run: |
           for file in dist/*.mjs; do
             filename=$(basename -- "$file")
@@ -52,6 +59,7 @@ jobs:
           done
 
       - name: Upload build artifact
+        id: build-upload-build-artifact
         uses: actions/upload-artifact@v3
         with:
           name: build
@@ -64,52 +72,61 @@ jobs:
 
     steps:
       - name: Checkout repository
+        id: doc-checkout-repository
         uses: actions/checkout@v3
 
       - name: Install pnpm
+        id: doc-install-pnpm
         uses: pnpm/action-setup@v2
         with:
           version: 8.6.7
 
       - name: Set up Node.js
+        id: doc-set-up-nodejs
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'
           cache: 'pnpm'
 
       - name: Install dependencies
+        id: doc-install-dependencies
         run: pnpm install
 
       - name: Fetch latest release version
-        id: fetch-latest-release
+        id: doc-fetch-latest-release-version
         uses: fangqiuming/latest-release-version@v1.2
 
-      - name: Update openapirc.json with latest release version
+      - name: Update openapirc.json version
+        id: doc-update-openapirc-version
         run: |
-          VERSION="${{ steps.fetch-latest-release.outputs.tag_name }}"
+          VERSION="${{ steps.doc-fetch-latest-release-version.outputs.tag_name }}"
           VERSION="${VERSION#v}"
           jq --arg version "$VERSION" '.info.version = $version' .openapirc.json > .openapirc.updated.json
           mv .openapirc.updated.json .openapirc.json
 
       - name: Build OpenApi
+        id: doc-build-openapi
         run: pnpm build.openapi
 
       - name: Build Documentation
+        id: doc-build-documentation
         run: pnpm build.openapi-doc
 
       - name: Move doc to major version folder
+        id: doc-move-doc-to-major-version-folder
         run: |
-          MAJOR_VERSION=$(echo ${{ steps.fetch-latest-release.outputs.tag_name }} | cut -d '.' -f 1)
+          MAJOR_VERSION=$(echo ${{ steps.doc-fetch-latest-release-version.outputs.tag_name }} | cut -d '.' -f 1)
           mkdir -p dist/$MAJOR_VERSION
           mv dist/index.html dist/$MAJOR_VERSION
 
       - name: Upload build artifact
+        id: doc-upload-build-artifact
         uses: actions/upload-pages-artifact@v2
         with:
           name: doc
           path: dist
 
-  publish-doc:
+  publish-documentation:
     name: Publish documentation
     needs: doc
     permissions:
@@ -122,7 +139,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to GitHub Pages
-        id: deployment
+        id: publish-documentation-deploy-to-github-pages
         uses: actions/deploy-pages@v2
         with:
           artifact_name: doc
@@ -146,11 +163,7 @@ jobs:
 
       - name: Set Major Version
         id: publish-set-major-version
-        run: echo "MAJOR_VERSION=$(echo ${{ steps.fetch-latest-release.outputs.tag_name }} | cut -d '.' -f 1)" >> $GITHUB_ENV
-
-      - name: Display Major Version
-        id: publish-display-major-version
-        run: echo $MAJOR_VERSION
+        run: echo "MAJOR_VERSION=$(echo ${{ steps.publish-fetch-latest-release-version.outputs.tag_name }} | cut -d '.' -f 1)" >> $GITHUB_ENV
 
       - name: Publish on S3
         id: publish-publish-on-s3
