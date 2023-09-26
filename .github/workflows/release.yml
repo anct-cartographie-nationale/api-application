@@ -195,13 +195,14 @@ jobs:
     steps:
       - name: Invalidate CloudFront
         id: reset-cache-invalidate-cloudfront
-        uses: chetan/invalidate-cloudfront-action@v2
+        uses: muratiger/invalidate-cloudfront-and-wait-for-completion-action@master
         env:
-          DISTRIBUTION: ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
           PATHS: '/*'
+          DISTRIBUTION_ID: ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
           AWS_REGION: 'us-east-1'
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
       - name: Refresh lieux mediation numerique
         id: reset-cache-refresh-lieux-mediation-numerique
         run: curl -H "Accept-Encoding:gzip, br" https://cartographie.societenumerique.gouv.fr/api/v0/lieux-inclusion-numerique
