@@ -32,9 +32,9 @@ export default defineConfig({
     },
     rollupOptions: {
       external: /^@aws-sdk|zlib/,
-      input: getRoutesEntries(),
       output: {
-        entryFileNames: '[name].mjs'
+        entryFileNames: '[name].mjs',
+        chunkFileNames: 'chunks/[name].js'
       }
     }
   }
