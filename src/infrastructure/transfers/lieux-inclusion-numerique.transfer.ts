@@ -24,7 +24,7 @@ type Typologie =
  * @openapi
  * components:
  *   schemas:
- *     LieuMediationNumerique:
+ *     LieuInclusionNumerique:
  *       required:
  *         - id
  *         - nom
@@ -206,7 +206,7 @@ type Typologie =
  *            description: Donnée pivot provenant d’une des deux bases de référence - le répertoire SIRENE des entreprises et de leurs établissements de l’Insee ou le Répertoire national des associations du ministère de l’intérieur (RNA).
  *            example: 55217862900132
  */
-export interface LieuxMediationNumeriqueTransfer {
+export interface LieuxInclusionNumeriqueTransfer {
   id: string;
   nom: string;
 
