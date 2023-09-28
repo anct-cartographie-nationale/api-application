@@ -34,7 +34,7 @@ export default defineConfig({
       external: /^@aws-sdk|zlib/,
       output: {
         entryFileNames: '[name].mjs',
-        chunkFileNames: 'chunks/[name].js'
+        chunkFileNames: 'chunks/[name].mjs'
       }
     }
   }
