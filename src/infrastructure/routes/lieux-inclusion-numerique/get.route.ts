@@ -2,6 +2,7 @@ import { APIGatewayProxyResultV2 } from 'aws-lambda';
 import { toSchemaLieuxDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
 import { scanAll } from '../../dynamo-db';
 import { gzipedSuccessResponse } from '../../responses';
+import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
 
 /**
  * @openapi
@@ -24,7 +25,7 @@ import { gzipedSuccessResponse } from '../../responses';
  *                 data:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/LieuMediationNumerique'
+ *                     $ref: '#/components/schemas/LieuInclusionNumerique'
  */
-export const handler = async (): Promise<APIGatewayProxyResultV2> =>
+export const handler = async (): Promise<APIGatewayProxyResultV2<LieuxInclusionNumeriqueTransfer>> =>
   gzipedSuccessResponse(toSchemaLieuxDeMediationNumerique(await scanAll('LieuxInclusionNumerique')));
