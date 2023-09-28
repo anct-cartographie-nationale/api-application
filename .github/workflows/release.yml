@@ -52,11 +52,12 @@ jobs:
         run: |
           for file in dist/*.mjs; do
             filename=$(basename -- "$file")
-            filename_noext="${filename%.*}"
+            filename_next="${filename%.*}"
             mv "$file" "dist/index.mjs"
-            (cd dist && zip "$filename_noext.zip" "index.mjs")
+            (cd dist && zip -r "$filename_next.zip" "index.mjs" "chunks")
             rm "dist/index.mjs"
           done
+          rm -rf dist/chunks
 
       - name: Upload build artifact
         id: build-upload-build-artifact
