@@ -19,5 +19,14 @@
       "description": "Production server"
     }
   ],
-  "paths": {}
+  "paths": {},
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuthorization": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    }
+  }
 }
