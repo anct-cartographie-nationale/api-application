@@ -209,7 +209,6 @@ type Typologie =
 export interface LieuxInclusionNumeriqueTransfer {
   id: string;
   nom: string;
-
   commune: string;
   code_postal: string;
   code_insee: string;

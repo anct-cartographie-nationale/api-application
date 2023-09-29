@@ -26,4 +26,5 @@ import { SourceTransfer } from '../../transfers/source.transfer';
  *                   items:
  *                     $ref: '#/components/schemas/Source'
  */
-export const handler = async (): Promise<APIGatewayProxyResultV2<SourceTransfer>> => successResponse(await scanAll('Sources'));
+export const handler = async (): Promise<APIGatewayProxyResultV2<SourceTransfer>> =>
+  successResponse(await scanAll('cartographie-nationale.sources'));

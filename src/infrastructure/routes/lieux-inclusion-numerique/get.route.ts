@@ -28,4 +28,4 @@ import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
  *                     $ref: '#/components/schemas/LieuInclusionNumerique'
  */
 export const handler = async (): Promise<APIGatewayProxyResultV2<LieuxInclusionNumeriqueTransfer>> =>
-  gzipedSuccessResponse(toSchemaLieuxDeMediationNumerique(await scanAll('LieuxInclusionNumerique')));
+  gzipedSuccessResponse(toSchemaLieuxDeMediationNumerique(await scanAll('cartographie-nationale.lieux-inclusion-numerique')));
