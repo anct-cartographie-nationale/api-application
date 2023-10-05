@@ -47,7 +47,11 @@ jobs:
         id: build-build
         run: pnpm build
 
-      - name: Prepare and Zip build files
+      - name: Build OpenApi
+        id: doc-build-openapi
+        run: pnpm build.openapi
+
+      - name: Prepare and zip build files
         id: build-prepare-and-zip-build-files
         run: |
           for file in dist/*.mjs; do
@@ -57,6 +61,7 @@ jobs:
             (cd dist && zip -r "$filename_next.zip" "index.mjs" "chunks")
             rm "dist/index.mjs"
           done
+          mv openapi.json dist
           rm -rf dist/chunks
 
       - name: Upload build artifact
