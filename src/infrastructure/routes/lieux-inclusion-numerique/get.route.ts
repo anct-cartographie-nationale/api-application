@@ -1,7 +1,11 @@
 import { APIGatewayProxyResultV2 } from 'aws-lambda';
 import { toSchemaLieuxDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
+import { LieuMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique/lib/cjs/models';
+import { pipe } from 'fp-ts/function';
+import { fromTask, getOrElse, map } from 'fp-ts/TaskEither';
+import { toTask } from '../../../fp-helpers';
 import { scanAll } from '../../dynamo-db';
-import { gzipedSuccessResponse } from '../../responses';
+import { failureResponse, gzipResponse, successResponse } from '../../responses';
 import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
 
 /**
@@ -28,4 +32,10 @@ import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
  *                     $ref: '#/components/schemas/LieuInclusionNumerique'
  */
 export const handler = async (): Promise<APIGatewayProxyResultV2<LieuxInclusionNumeriqueTransfer>> =>
-  gzipedSuccessResponse(toSchemaLieuxDeMediationNumerique(await scanAll('cartographie-nationale.lieux-inclusion-numerique')));
+  pipe(
+    fromTask(() => scanAll<LieuMediationNumerique>('cartographie-nationale.lieux-inclusion-numerique')),
+    map(toSchemaLieuxDeMediationNumerique),
+    map(successResponse),
+    map(gzipResponse),
+    getOrElse(toTask(failureResponse))
+  )();

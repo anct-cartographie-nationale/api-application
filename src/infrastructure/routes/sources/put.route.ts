@@ -1,7 +1,7 @@
 import { DynamoDBDocumentClient, PutCommand, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { SourceTransfer } from '../../transfers/source.transfer';
+import { SourceTransfer } from '../../transfers';
 import { successResponse } from '../../responses';
 
 /**
