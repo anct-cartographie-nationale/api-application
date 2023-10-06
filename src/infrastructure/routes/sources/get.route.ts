@@ -1,7 +1,10 @@
 import { APIGatewayProxyResultV2 } from 'aws-lambda';
+import { pipe } from 'fp-ts/function';
+import { fromTask, getOrElse, map } from 'fp-ts/TaskEither';
+import { toTask } from '../../../fp-helpers';
 import { scanAll } from '../../dynamo-db';
-import { successResponse } from '../../responses';
-import { SourceTransfer } from '../../transfers/source.transfer';
+import { failureResponse, noCacheResponse, successResponse } from '../../responses';
+import { SourceTransfer } from '../../transfers';
 
 /**
  * @openapi
@@ -27,4 +30,9 @@ import { SourceTransfer } from '../../transfers/source.transfer';
  *                     $ref: '#/components/schemas/Source'
  */
 export const handler = async (): Promise<APIGatewayProxyResultV2<SourceTransfer>> =>
-  successResponse(await scanAll('cartographie-nationale.sources'));
+  pipe(
+    fromTask(() => scanAll('cartographie-nationale.sources')),
+    map(successResponse),
+    map(noCacheResponse),
+    getOrElse(toTask(failureResponse))
+  )();

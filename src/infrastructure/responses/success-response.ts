@@ -1,6 +1,6 @@
-import { APIGatewayProxyResultV2 } from 'aws-lambda';
+import { APIGatewayProxyStructuredResultV2 } from 'aws-lambda/trigger/api-gateway-proxy';
 
-export const successResponse = <T>(body: T): APIGatewayProxyResultV2 => ({
+export const successResponse = <T>(body: T): APIGatewayProxyStructuredResultV2 => ({
   statusCode: 200,
   headers: {
     'Content-Type': 'application/json'
