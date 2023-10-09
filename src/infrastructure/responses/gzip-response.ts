@@ -1,7 +1,9 @@
 import { gzipSync } from 'zlib';
 import { APIGatewayProxyStructuredResultV2 } from 'aws-lambda/trigger/api-gateway-proxy';
 
-export const gzipResponse = (response: APIGatewayProxyStructuredResultV2): APIGatewayProxyStructuredResultV2 => ({
+export const gzipResponse = (
+  response: APIGatewayProxyStructuredResultV2 & { body: string }
+): APIGatewayProxyStructuredResultV2 => ({
   statusCode: response.statusCode,
   headers: {
     ...response.headers,
@@ -9,5 +11,5 @@ export const gzipResponse = (response: APIGatewayProxyStructuredResultV2): APIGa
     'Cache-Control': 'public, max-age=86400'
   },
   isBase64Encoded: true,
-  body: gzipSync(JSON.stringify(response.body)).toString('base64')
+  body: gzipSync(response.body).toString('base64')
 });
