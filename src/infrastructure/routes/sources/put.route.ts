@@ -6,11 +6,18 @@ import { successResponse } from '../../responses';
 
 /**
  * @openapi
- * /sources:
+ * /sources/{name}:
  *   put:
  *     summary: Ajouter ou modifier une source de données.
  *     description: Ajoute une nouvelle source de données si aucune n'existe avec le même non, sinon la source de données correspondante sera mise à jour.
  *     operationId: sources.put
+ *     parameters:
+ *       - in: path
+ *         name: name
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Nom de la source dont les données ont été récupérées pour constituer la liste des lieux d'inclusion numérique.
  *     security:
  *       - ApiKeyAuthorization: []
  *     requestBody:
@@ -23,16 +30,26 @@ import { successResponse } from '../../responses';
  *     responses:
  *       401:
  *         description: La clé d'API est manquante ou invalide.
+ *       422:
+ *         description: Le champ "hash" est obligatoire dans le body.
  *       200:
- *           description: La source de données a été mise à jour.
+ *          description: La source de données a été mise à jour.
  */
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2<SourceTransfer>> => {
-  const { name, hash } = JSON.parse(event.body ?? '');
+  const { hash } = JSON.parse(event.body ?? '');
+  const name: string | undefined = event.pathParameters?.['name'];
 
-  if (name == null || hash == null) {
+  if (name == null) {
     return {
       statusCode: 422,
-      body: JSON.stringify({ message: 'Les champs "name" et "hash" sont obligatoires' })
+      body: JSON.stringify({ message: 'Le paramètres "name" est obligatoire dans le chemin' })
+    };
+  }
+
+  if (hash == null) {
+    return {
+      statusCode: 422,
+      body: JSON.stringify({ message: 'Le champ "hash" est obligatoire dans le body' })
     };
   }
 
