@@ -1,3 +1,5 @@
+import { SchemaStructureDataInclusion } from '@gouvfr-anct/lieux-de-mediation-numerique';
+
 /**
  * @openapi
  * components:
@@ -44,6 +46,4 @@
  *           description: Ce champ contient la date, et optionnellement l'heure, à laquelle la donnée a été mise à jour.
  *           example: 2022-04-28
  */
-export interface StructuresInclusionTransfer {
-  hash: string;
-}
+export type StructuresInclusionTransfer = SchemaStructureDataInclusion;

@@ -1,7 +1,6 @@
 import { DynamoDBDocumentClient, PutCommand, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { SourceTransfer } from '../../transfers';
 import { successResponse } from '../../responses';
 
 /**
@@ -35,7 +34,7 @@ import { successResponse } from '../../responses';
  *       200:
  *          description: La source de données a été mise à jour.
  */
-export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2<SourceTransfer>> => {
+export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
   const { hash } = JSON.parse(event.body ?? '');
   const name: string | undefined = event.pathParameters?.['name'];
 
