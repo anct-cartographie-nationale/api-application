@@ -1,7 +1,7 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBDocumentClient, PutCommand, PutCommandOutput, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { v5 as uuid } from 'uuid';
+import { v4 as uuid } from 'uuid';
 import {
   fromSchemaLieuxDeMediationNumerique,
   Id,
@@ -41,11 +41,7 @@ const upsertLieu =
         TableName: 'cartographie-nationale.lieux-inclusion-numerique',
         Item: reassignId(
           lieuInclusionNumerique,
-          Id(
-            lieuInclusionNumeriqueFound == undefined
-              ? uuid(lieuInclusionNumerique.source ?? 'EMPTY_SOURCE', lieuInclusionNumerique.id)
-              : lieuInclusionNumeriqueFound.id
-          )
+          Id(lieuInclusionNumeriqueFound == undefined ? uuid() : lieuInclusionNumeriqueFound.id)
         )
       })
     );
