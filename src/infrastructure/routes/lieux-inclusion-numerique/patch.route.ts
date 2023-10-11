@@ -2,12 +2,7 @@ import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBDocumentClient, PutCommand, PutCommandOutput, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { v5 as uuid } from 'uuid';
-import {
-  fromSchemaLieuxDeMediationNumerique,
-  Id,
-  LieuMediationNumerique,
-  SchemaLieuMediationNumerique
-} from '@gouvfr-anct/lieux-de-mediation-numerique';
+import { fromSchemaLieuxDeMediationNumerique, Id, LieuMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
 import { successResponse } from '../../responses';
 import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
 import { LieuInclusionNumeriqueStorage, reassignId, toISOStringDateMaj } from '../../storage';
@@ -79,8 +74,7 @@ const upsertLieu =
  *         description: Les lieux d'inclusion numérique à ajouter ou à modifier ont étés traités avec succès.
  */
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
-  const lieuxInclusionNumerique: LieuxInclusionNumeriqueTransfer[] =
-    (event.body as SchemaLieuMediationNumerique[] | undefined) ?? [];
+  const lieuxInclusionNumerique: LieuxInclusionNumeriqueTransfer[] = JSON.parse(event.body ?? '[]');
   const client: DynamoDBClient = new DynamoDBClient();
   const docClient: DynamoDBDocumentClient = DynamoDBDocumentClient.from(client, {
     marshallOptions: { convertClassInstanceToMap: true }
