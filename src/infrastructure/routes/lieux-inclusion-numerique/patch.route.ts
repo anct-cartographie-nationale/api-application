@@ -9,8 +9,8 @@ import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
  * @openapi
  * /lieux-inclusion-numerique:
  *   patch:
- *     summary: Mets à jour la collection des lieux d'inclusion numérique en ajoutant ou modifiant une série d'éléments.
- *     description: description: La mise à jour de la collection des lieux d'inclusion numérique se produit en ajoutant de nouveaux éléments ou en modifiant ceux qui sont déjà présents à partir de l'ensemble des lieux d'inclusion numérique fournis.
+ *     summary: Mettre à jour la collection des lieux d'inclusion numérique en ajoutant ou modifiant une série d'éléments.
+ *     description: La mise à jour de la collection des lieux d'inclusion numérique se produit en ajoutant de nouveaux éléments ou en modifiant ceux qui sont déjà présents à partir de l'ensemble des lieux d'inclusion numérique fournis.
  *     operationId: lieux-inclusion-numerique.patch
  *     security:
  *       - ApiKeyAuthorization: []
@@ -18,14 +18,11 @@ import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
  *       description: Lieux d'inclusion numérique à ajouter ou modifier
  *       required: true
  *       content:
- *          application/json:
- *            schema:
- *              type: object
- *              properties:
- *                data:
- *                  type: array
- *                  items:
-                      $ref: '#/components/schemas/LieuInclusionNumerique'
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               $ref: '#/components/schemas/LieuInclusionNumerique'
  *     responses:
  *       400:
  *         description: Erreur par défaut.

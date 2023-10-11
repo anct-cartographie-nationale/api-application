@@ -25,7 +25,7 @@ import { successResponse } from '../../responses';
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Source'
+ *             $ref: '#/components/schemas/SourceHash'
  *     responses:
  *       401:
  *         description: La clé d'API est manquante ou invalide.

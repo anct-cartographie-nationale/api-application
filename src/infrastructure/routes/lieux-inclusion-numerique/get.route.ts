@@ -24,12 +24,9 @@ import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/LieuInclusionNumerique'
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/LieuInclusionNumerique'
  */
 export const handler = async (): Promise<APIGatewayProxyResultV2<LieuxInclusionNumeriqueTransfer>> =>
   pipe(
