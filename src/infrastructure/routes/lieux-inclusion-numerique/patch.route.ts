@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { DynamoDBDocumentClient, PutCommand, PutCommandOutput, QueryCommand, QueryCommandOutput } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, PutCommandOutput, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { v5 as uuid } from 'uuid';
 import {
@@ -10,7 +10,45 @@ import {
 } from '@gouvfr-anct/lieux-de-mediation-numerique';
 import { successResponse } from '../../responses';
 import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
-import { reassignId } from '../../transform';
+import { LieuInclusionNumeriqueStorage, reassignId, toISOStringDateMaj } from '../../storage';
+
+const findLieuxBySourceIndex =
+  (docClient: DynamoDBDocumentClient) =>
+  async (source: string, id: string): Promise<LieuInclusionNumeriqueStorage | undefined> =>
+    (
+      await docClient.send(
+        new QueryCommand({
+          TableName: 'cartographie-nationale.lieux-inclusion-numerique',
+          IndexName: 'source-index',
+          ExpressionAttributeNames: {
+            '#source': 'source',
+            '#sourceId': 'sourceId'
+          },
+          ExpressionAttributeValues: {
+            ':source': source,
+            ':sourceId': id
+          },
+          KeyConditionExpression: '#source = :source and #sourceId = :sourceId'
+        })
+      )
+    ).Items?.[0] as LieuInclusionNumeriqueStorage | undefined;
+
+const upsertLieu =
+  (docClient: DynamoDBDocumentClient) =>
+  (lieuInclusionNumerique: LieuInclusionNumeriqueStorage, lieuInclusionNumeriqueFound?: LieuInclusionNumeriqueStorage) =>
+    docClient.send(
+      new PutCommand({
+        TableName: 'cartographie-nationale.lieux-inclusion-numerique',
+        Item: reassignId(
+          lieuInclusionNumerique,
+          Id(
+            lieuInclusionNumeriqueFound == undefined
+              ? uuid(lieuInclusionNumerique.source ?? 'EMPTY_SOURCE', lieuInclusionNumerique.id)
+              : lieuInclusionNumeriqueFound.id
+          )
+        )
+      })
+    );
 
 /**
  * @openapi
@@ -53,37 +91,11 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
           const source: string = lieuInclusionNumerique.source ?? 'EMPTY_SOURCE';
           const id: string = lieuInclusionNumerique.id;
 
-          const queryCommand: QueryCommand = new QueryCommand({
-            TableName: 'cartographie-nationale.lieux-inclusion-numerique',
-            IndexName: 'source-index',
-            ExpressionAttributeNames: {
-              '#source': 'source',
-              '#sourceId': 'sourceId'
-            },
-            ExpressionAttributeValues: {
-              ':source': source,
-              ':sourceId': id
-            },
-            KeyConditionExpression: '#source = :source and #sourceId = :sourceId'
-          });
+          const lieuInclusionNumeriqueFound: LieuInclusionNumeriqueStorage | undefined = await findLieuxBySourceIndex(
+            docClient
+          )(source, id);
 
-          const response: QueryCommandOutput = await docClient.send(queryCommand);
-          const lieuInclusionNumeriqueFound: LieuMediationNumerique | undefined = response.Items?.[0] as
-            | LieuMediationNumerique
-            | undefined;
-
-          const putCommand: PutCommand = new PutCommand({
-            TableName: 'cartographie-nationale.lieux-inclusion-numerique',
-            Item: reassignId(
-              lieuInclusionNumerique,
-              Id(
-                lieuInclusionNumeriqueFound == undefined
-                  ? uuid(lieuInclusionNumerique.source ?? 'EMPTY_SOURCE', lieuInclusionNumerique.id)
-                  : lieuInclusionNumeriqueFound.id
-              )
-            )
-          });
-          return docClient.send(putCommand);
+          return upsertLieu(docClient)(toISOStringDateMaj(lieuInclusionNumerique), lieuInclusionNumeriqueFound);
         }
       )
     );
