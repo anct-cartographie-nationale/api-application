@@ -22,12 +22,9 @@ import { SourceTransfer } from '../../transfers';
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Source'
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Source'
  */
 export const handler = async (): Promise<APIGatewayProxyResultV2<SourceTransfer>> =>
   pipe(

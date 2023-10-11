@@ -24,12 +24,9 @@ import { StructuresInclusionTransfer } from '../../transfers';
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/StructureDataInclusion'
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/StructureDataInclusion'
  */
 export const handler = async (): Promise<APIGatewayProxyResultV2<StructuresInclusionTransfer>> =>
   pipe(

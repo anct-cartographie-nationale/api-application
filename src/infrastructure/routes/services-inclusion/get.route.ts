@@ -24,12 +24,9 @@ import { ServicesInclusionTransfer } from '../../transfers';
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/ServiceDataInclusion'
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/ServiceDataInclusion'
  */
 export const handler = async (): Promise<APIGatewayProxyResultV2<ServicesInclusionTransfer>> =>
   pipe(
