@@ -1,24 +1,4 @@
-type Typologie =
-  | 'ACI'
-  | 'ACIPHC'
-  | 'AFPA'
-  | 'AI'
-  | 'ASE'
-  | 'ASSO'
-  | 'ASSO_CHOMEUR'
-  | 'Autre'
-  | 'BIB'
-  | 'CAARUD'
-  | 'CADA'
-  | 'CAF'
-  | 'CAP_EMPLOI'
-  | 'CAVA'
-  | 'CC'
-  | 'CCAS'
-  | 'CCONS'
-  | 'CD'
-  | 'CHRS'
-  | 'CHU';
+import { SchemaLieuMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
 
 /**
  * @openapi
@@ -206,33 +186,4 @@ type Typologie =
  *            description: Donnée pivot provenant d’une des deux bases de référence - le répertoire SIRENE des entreprises et de leurs établissements de l’Insee ou le Répertoire national des associations du ministère de l’intérieur (RNA).
  *            example: 55217862900132
  */
-export interface LieuxInclusionNumeriqueTransfer {
-  id: string;
-  nom: string;
-  commune: string;
-  code_postal: string;
-  code_insee: string;
-  adresse: string;
-  complement_adresse?: string;
-  latitude?: number;
-  longitude?: number;
-  typologie?: Typologie;
-  telephone?: string;
-  courriel?: string;
-  site_web?: string;
-  horaires?: string;
-  presentation_resume?: string;
-  presentation_detail?: string;
-  source?: string;
-  structure_parente?: string;
-  date_maj?: string;
-  services: string;
-  publics_accueillis?: string;
-  conditions_acces?: string;
-  labels_nationaux?: string;
-  labels_autres?: string;
-  modalites_accompagnement?: string;
-  accessibilite?: string;
-  prise_rdv?: string;
-  pivot: string;
-}
+export type LieuxInclusionNumeriqueTransfer = SchemaLieuMediationNumerique;

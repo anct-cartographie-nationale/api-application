@@ -1,3 +1,5 @@
+import { SchemaServiceDataInclusion } from '@gouvfr-anct/lieux-de-mediation-numerique';
+
 /**
  * @openapi
  * components:
@@ -23,6 +25,4 @@
  *           description: un nom pour le service considéré rendu par la structure. Il n'est pas nécessaire d'indiquer à nouveau le nom de la structure.
  *           example : "Accompagnement dans les démarches administratives"
  */
-export interface ServicesInclusionTransfer {
-  hash: string;
-}
+export type ServicesInclusionTransfer = SchemaServiceDataInclusion;
