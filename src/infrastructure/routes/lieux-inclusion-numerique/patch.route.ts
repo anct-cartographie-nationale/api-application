@@ -1,13 +1,16 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBDocumentClient, PutCommand, PutCommandOutput, QueryCommand, QueryCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { v5 as uuid } from 'uuid';
 import {
   fromSchemaLieuxDeMediationNumerique,
+  Id,
   LieuMediationNumerique,
   SchemaLieuMediationNumerique
 } from '@gouvfr-anct/lieux-de-mediation-numerique';
 import { successResponse } from '../../responses';
 import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
+import { reassignId } from '../../transform';
 
 /**
  * @openapi
@@ -38,7 +41,10 @@ import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
   const lieuxInclusionNumerique: LieuxInclusionNumeriqueTransfer[] =
     (event.body as SchemaLieuMediationNumerique[] | undefined) ?? [];
-  const docClient: DynamoDBDocumentClient = DynamoDBDocumentClient.from(new DynamoDBClient());
+  const client: DynamoDBClient = new DynamoDBClient();
+  const docClient: DynamoDBDocumentClient = DynamoDBDocumentClient.from(client, {
+    marshallOptions: { convertClassInstanceToMap: true }
+  });
 
   try {
     await Promise.all(
@@ -50,28 +56,32 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
           const queryCommand: QueryCommand = new QueryCommand({
             TableName: 'cartographie-nationale.lieux-inclusion-numerique',
             IndexName: 'source-index',
-            KeyConditionExpression: '#source = :v_source AND #sourceId = :v_sourceId',
             ExpressionAttributeNames: {
               '#source': 'source',
               '#sourceId': 'sourceId'
             },
             ExpressionAttributeValues: {
-              ':v_source': { S: source },
-              ':v_sourceId': { S: id }
-            }
+              ':source': source,
+              ':sourceId': id
+            },
+            KeyConditionExpression: '#source = :source and #sourceId = :sourceId'
           });
 
           const response: QueryCommandOutput = await docClient.send(queryCommand);
-
-          console.log(response.Items);
-
-          // todo: essayer de récupérer l'élément en fonction de sa source et de son id
-          //  - si l'élément existe, récupérer l'id et déplacer l'id de la source dans sourceId
-          //  - si l'élément n'existe pas générer un nouvel id et déplacer l'id de la source dans sourceId
+          const lieuInclusionNumeriqueFound: LieuMediationNumerique | undefined = response.Items?.[0] as
+            | LieuMediationNumerique
+            | undefined;
 
           const putCommand: PutCommand = new PutCommand({
             TableName: 'cartographie-nationale.lieux-inclusion-numerique',
-            Item: lieuInclusionNumerique
+            Item: reassignId(
+              lieuInclusionNumerique,
+              Id(
+                lieuInclusionNumeriqueFound == undefined
+                  ? uuid(lieuInclusionNumerique.source ?? 'EMPTY_SOURCE', lieuInclusionNumerique.id)
+                  : lieuInclusionNumeriqueFound.id
+              )
+            )
           });
           return docClient.send(putCommand);
         }

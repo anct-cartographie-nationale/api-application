@@ -65,6 +65,8 @@
     "@aws-sdk/client-dynamodb": "^3.409.0",
     "@aws-sdk/lib-dynamodb": "^3.409.0",
     "@gouvfr-anct/lieux-de-mediation-numerique": "^1.19.0",
-    "fp-ts": "^2.16.1"
+    "@types/uuid": "^9.0.5",
+    "fp-ts": "^2.16.1",
+    "uuid": "^9.0.1"
   }
 }
