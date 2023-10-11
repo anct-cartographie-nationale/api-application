@@ -1,7 +1,11 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBDocumentClient, PutCommand, PutCommandOutput, QueryCommand, QueryCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { fromSchemaLieuxDeMediationNumerique, LieuMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
+import {
+  fromSchemaLieuxDeMediationNumerique,
+  LieuMediationNumerique,
+  SchemaLieuMediationNumerique
+} from '@gouvfr-anct/lieux-de-mediation-numerique';
 import { successResponse } from '../../responses';
 import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
 
@@ -35,7 +39,8 @@ import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
  *         description: Les lieux d'inclusion numérique à ajouter ou à modifier ont étés traités avec succès.
  */
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
-  const lieuxInclusionNumerique: LieuxInclusionNumeriqueTransfer[] = JSON.parse(event.body ?? '[]');
+  const lieuxInclusionNumerique: LieuxInclusionNumeriqueTransfer[] =
+    (event.body as SchemaLieuMediationNumerique[] | undefined) ?? [];
   const docClient: DynamoDBDocumentClient = DynamoDBDocumentClient.from(new DynamoDBClient());
 
   try {
@@ -48,13 +53,14 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
           const queryCommand: QueryCommand = new QueryCommand({
             TableName: 'cartographie-nationale.lieux-inclusion-numerique',
             IndexName: 'source-index',
+            KeyConditionExpression: '#source = :v_source AND #sourceId = :v_sourceId',
             ExpressionAttributeNames: {
               '#source': 'source',
               '#sourceId': 'sourceId'
             },
             ExpressionAttributeValues: {
-              ':sourceVal': { S: source },
-              ':sourceIdVal': { S: id }
+              ':v_source': { S: source },
+              ':v_sourceId': { S: id }
             }
           });
 

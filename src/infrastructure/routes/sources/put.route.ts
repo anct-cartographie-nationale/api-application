@@ -2,6 +2,7 @@ import { DynamoDBDocumentClient, PutCommand, PutCommandOutput } from '@aws-sdk/l
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { successResponse } from '../../responses';
+import { SourceHashTransfer } from '../../transfers';
 
 /**
  * @openapi
@@ -35,7 +36,7 @@ import { successResponse } from '../../responses';
  *          description: La source de données a été mise à jour.
  */
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
-  const { hash } = JSON.parse(event.body ?? '');
+  const source: SourceHashTransfer | undefined = event?.body as SourceHashTransfer | undefined;
   const name: string | undefined = event.pathParameters?.['name'];
 
   if (name == null) {
@@ -45,7 +46,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     };
   }
 
-  if (hash == null) {
+  if (source?.hash == null) {
     return {
       statusCode: 422,
       body: JSON.stringify({ message: 'Le champ "hash" est obligatoire dans le body' })
@@ -55,7 +56,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   const docClient: DynamoDBDocumentClient = DynamoDBDocumentClient.from(new DynamoDBClient());
   const putCommand: PutCommand = new PutCommand({
     TableName: 'cartographie-nationale.sources',
-    Item: { name, hash }
+    Item: { name, hash: source.hash }
   });
 
   const response: PutCommandOutput = await docClient.send(putCommand);
