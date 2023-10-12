@@ -1,7 +1,7 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
-import { findLieuxBySourceIndex, LieuInclusionNumeriqueStorage, upsertLieu } from '../../../storage';
+import { DynamoDBDocumentClient, PutCommand, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
+import { findLieuxBySourceIndex, LieuInclusionNumeriqueStorage } from '../../../storage';
 import { successResponse } from '../../../responses';
 import { FingerprintTransfer } from '../../../transfers';
 
@@ -24,8 +24,10 @@ import { FingerprintTransfer } from '../../../transfers';
  *             items:
  *               $ref: '#/components/schemas/Fingerprint'
  *     responses:
- *       500:
- *         description: Non implémenté pour le moment.
+ *       200:
+ *         description: Les empreintes numériques à associer aux lieux ont étés traités avec succès.
+ *       422:
+ *         description: Le format des données fournies dans le body doit correspondre à un tableau empreintes numériques valide.
  */
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
   const fingerprints: FingerprintTransfer[] = JSON.parse(event.body ?? '[]');
@@ -44,12 +46,11 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
 
         if (lieuInclusionNumeriqueFound == null) return;
 
-        return upsertLieu(docClient)(
-          {
-            ...lieuInclusionNumeriqueFound,
-            hash: fingerprint.hash
-          },
-          lieuInclusionNumeriqueFound
+        return docClient.send(
+          new PutCommand({
+            TableName: 'cartographie-nationale.lieux-inclusion-numerique',
+            Item: { ...lieuInclusionNumeriqueFound, hash: fingerprint.hash }
+          })
         );
       })
     );
