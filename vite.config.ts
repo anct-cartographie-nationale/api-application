@@ -12,7 +12,7 @@ const getActionName = (filePath: string) => path.parse(filePath).name.replace(ne
 
 const getRessourceName = (filePath: string) => path.parse(filePath).dir.replace(new RegExp(`^${ROUTES_BASE_PATH}/`), '');
 
-const getFileName = (filePath: string): string => `${getRessourceName(filePath)}.${getActionName(filePath)}`;
+const getFileName = (filePath: string): string => `${getRessourceName(filePath)}.${getActionName(filePath)}`.replace(/\//, '-');
 
 const getRoutesEntries = (): FilesInputOption =>
   glob.sync(ROUTES_PATH_PATTERN).reduce(

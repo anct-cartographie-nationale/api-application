@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { LieuMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique/lib/cjs/models';
 import { Adresse, Id, Nom, Pivot, Service, Services } from '@gouvfr-anct/lieux-de-mediation-numerique';
-import { LieuInclusionNumeriqueStorage, toISOStringDateMaj } from './lieu-inclusion-numerique.storage';
+import { LieuInclusionNumeriqueStorage } from '../lieu-inclusion-numerique.storage';
+import { toISOStringDateMaj } from './to-iso-string-date-maj';
 
 describe('lieu inclusion numerique storage', (): void => {
   it('should make a lieu inclusion numerique ready for storage', (): void => {
