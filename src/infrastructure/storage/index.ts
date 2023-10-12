@@ -1,2 +1,2 @@
-export * from './lieu-inclusion-numerique/lieu-inclusion-numerique.storage';
+export * from './lieu-inclusion-numerique';
 export * from './reassign-id/reassign-id';

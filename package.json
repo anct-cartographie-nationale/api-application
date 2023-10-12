@@ -14,7 +14,7 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "vite build",
-    "build.openapi": "swagger-jsdoc -d .openapirc.json ./src/infrastructure/routes/**/*.route.ts ./src/infrastructure/transfers/*.transfer.ts -o openapi.json",
+    "build.openapi": "swagger-jsdoc -d .openapirc.json ./src/infrastructure/**/*.route.ts ./src/infrastructure/transfers/*.transfer.ts -o openapi.json",
     "build.openapi-doc": "pnpm build.openapi && pnpm redocly build-docs openapi.json -o dist/index.html",
     "test": "vitest",
     "lint.es": "eslint",
