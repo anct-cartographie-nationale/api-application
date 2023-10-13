@@ -4,7 +4,7 @@ import { fromTask, getOrElse, map } from 'fp-ts/TaskEither';
 import { toTask } from '../../../../fp-helpers';
 import { allFingerprintsBySourceIndex } from '../../../dynamo-db';
 import { failureResponse, noCacheResponse, successResponse } from '../../../responses';
-import { fromLieuxInclusionNumeriqueStorage, ReadFingerprintTransfer } from '../../../transfers';
+import { fromLieuxInclusionNumeriqueStorage, FingerprintTransfer } from '../../../transfers';
 
 /**
  * @openapi
@@ -22,8 +22,8 @@ import { fromLieuxInclusionNumeriqueStorage, ReadFingerprintTransfer } from '../
  *         description: Nom de la source de données à partir de laquelle récupérer la liste des empreintes numériques.
  *     security: []
  *     responses:
- *       400:
- *         description: Erreur par défaut.
+ *       422:
+ *         description: Le paramètres "source" est obligatoire dans le chemin.
  *       200:
  *         description: La liste des empreintes numériques.
  *         content:
@@ -33,7 +33,7 @@ import { fromLieuxInclusionNumeriqueStorage, ReadFingerprintTransfer } from '../
  *               items:
  *                 $ref: '#/components/schemas/Fingerprint'
  */
-export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2<ReadFingerprintTransfer[]>> => {
+export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2<FingerprintTransfer[]>> => {
   const source: string | undefined = event.pathParameters?.['source'];
 
   if (source == null) {
