@@ -1,6 +1,5 @@
 import { APIGatewayProxyResultV2 } from 'aws-lambda';
-import { toSchemaStructuresDataInclusion } from '@gouvfr-anct/lieux-de-mediation-numerique';
-import { LieuMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique/lib/cjs/models';
+import { LieuMediationNumerique, toSchemaStructuresDataInclusion } from '@gouvfr-anct/lieux-de-mediation-numerique';
 import { pipe } from 'fp-ts/function';
 import { fromTask, getOrElse, map } from 'fp-ts/TaskEither';
 import { toTask } from '../../../fp-helpers';

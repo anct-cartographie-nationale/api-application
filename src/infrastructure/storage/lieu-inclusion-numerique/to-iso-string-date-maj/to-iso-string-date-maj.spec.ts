@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LieuMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique/lib/cjs/models';
-import { Adresse, Id, Nom, Pivot, Service, Services } from '@gouvfr-anct/lieux-de-mediation-numerique';
+import { LieuMediationNumerique, Adresse, Id, Nom, Pivot, Service, Services } from '@gouvfr-anct/lieux-de-mediation-numerique';
 import { LieuInclusionNumeriqueStorage } from '../lieu-inclusion-numerique.storage';
 import { toISOStringDateMaj } from './to-iso-string-date-maj';
 

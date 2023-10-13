@@ -1,8 +1,9 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
-import { findLieuxBySourceIndex, LieuInclusionNumeriqueStorage } from '../../../storage';
+import { findLieuxBySourceIndex } from '../../../dynamo-db';
 import { successResponse } from '../../../responses';
+import { LieuInclusionNumeriqueStorage } from '../../../storage';
 import { WriteFingerprintTransfer } from '../../../transfers';
 
 /**

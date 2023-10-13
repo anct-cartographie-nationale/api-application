@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Adresse, Id, Nom, Pivot, Service, Services } from '@gouvfr-anct/lieux-de-mediation-numerique';
-import { LieuMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique/lib/cjs/models';
+import { LieuMediationNumerique, Adresse, Id, Nom, Pivot, Service, Services } from '@gouvfr-anct/lieux-de-mediation-numerique';
 import { ReassignedId, reassignId } from './reassign-id';
 
 describe('reassign id', (): void => {
