@@ -1,8 +1,7 @@
 import { APIGatewayProxyResultV2 } from 'aws-lambda';
-import { toSchemaLieuxDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
-import { LieuMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique/lib/cjs/models';
 import { pipe } from 'fp-ts/function';
 import { fromTask, getOrElse, map } from 'fp-ts/TaskEither';
+import { toSchemaLieuxDeMediationNumerique, LieuMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
 import { toTask } from '../../../fp-helpers';
 import { scanAll } from '../../dynamo-db';
 import { failureResponse, gzipResponse, successResponse } from '../../responses';

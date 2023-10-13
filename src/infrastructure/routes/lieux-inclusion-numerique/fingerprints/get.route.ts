@@ -1,8 +1,10 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
+import { pipe } from 'fp-ts/function';
+import { fromTask, getOrElse, map } from 'fp-ts/TaskEither';
+import { toTask } from '../../../../fp-helpers';
+import { allFingerprintsBySourceIndex } from '../../../dynamo-db';
+import { failureResponse, noCacheResponse, successResponse } from '../../../responses';
 import { fromLieuxInclusionNumeriqueStorage, ReadFingerprintTransfer } from '../../../transfers';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
-import { LieuInclusionNumeriqueStorage } from '../../../storage';
 
 /**
  * @openapi
@@ -37,24 +39,15 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   if (source == null) {
     return {
       statusCode: 422,
-      body: JSON.stringify({ message: 'Le paramètres "name" est obligatoire dans le chemin' })
+      body: JSON.stringify({ message: 'Le paramètres "source" est obligatoire dans le chemin' })
     };
   }
 
-  const client: DynamoDBClient = new DynamoDBClient();
-  const docClient: DynamoDBDocumentClient = DynamoDBDocumentClient.from(client);
-
-  const lieuxInclusion: LieuInclusionNumeriqueStorage[] = (
-    await docClient.send(
-      new QueryCommand({
-        TableName: 'cartographie-nationale.lieux-inclusion-numerique',
-        IndexName: 'source-index',
-        ExpressionAttributeNames: { '#source': 'source' },
-        ExpressionAttributeValues: { ':source': source },
-        KeyConditionExpression: '#source = :source'
-      })
-    )
-  ).Items as LieuInclusionNumeriqueStorage[];
-
-  return fromLieuxInclusionNumeriqueStorage(lieuxInclusion);
+  return pipe(
+    fromTask(() => allFingerprintsBySourceIndex()(source)),
+    map(fromLieuxInclusionNumeriqueStorage),
+    map(successResponse),
+    map(noCacheResponse),
+    getOrElse(toTask(failureResponse))
+  )();
 };
