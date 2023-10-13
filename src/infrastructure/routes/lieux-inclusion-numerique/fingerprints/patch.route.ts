@@ -67,10 +67,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
           ? docClient.send(
               new DeleteCommand({
                 TableName: 'cartographie-nationale.lieux-inclusion-numerique',
-                Key: {
-                  source: lieuInclusionNumeriqueFound.source,
-                  sourceId: lieuInclusionNumeriqueFound.sourceId
-                }
+                Key: { id: lieuInclusionNumeriqueFound.id }
               })
             )
           : docClient.send(
