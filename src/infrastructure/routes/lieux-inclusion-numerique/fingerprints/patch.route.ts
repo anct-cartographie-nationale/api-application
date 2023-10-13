@@ -3,7 +3,7 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { findLieuxBySourceIndex, LieuInclusionNumeriqueStorage } from '../../../storage';
 import { successResponse } from '../../../responses';
-import { FingerprintTransfer } from '../../../transfers';
+import { WriteFingerprintTransfer } from '../../../transfers';
 
 /**
  * @openapi
@@ -30,7 +30,7 @@ import { FingerprintTransfer } from '../../../transfers';
  *         description: Le format des données fournies dans le body doit correspondre à un tableau empreintes numériques valide.
  */
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
-  const fingerprints: FingerprintTransfer[] = JSON.parse(event.body ?? '[]');
+  const fingerprints: WriteFingerprintTransfer[] = JSON.parse(event.body ?? '[]');
   const client: DynamoDBClient = new DynamoDBClient();
   const docClient: DynamoDBDocumentClient = DynamoDBDocumentClient.from(client, {
     marshallOptions: { convertClassInstanceToMap: true }
@@ -38,7 +38,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
 
   try {
     await Promise.all(
-      fingerprints.map(async (fingerprint: FingerprintTransfer): Promise<PutCommandOutput | undefined> => {
+      fingerprints.map(async (fingerprint: WriteFingerprintTransfer): Promise<PutCommandOutput | undefined> => {
         const lieuInclusionNumeriqueFound: LieuInclusionNumeriqueStorage | undefined = await findLieuxBySourceIndex(docClient)(
           fingerprint.source,
           fingerprint.sourceId
