@@ -14,7 +14,8 @@ export const allFingerprintsBySourceIndex =
         IndexName: 'source-index',
         ExpressionAttributeNames: { '#source': 'source' },
         ExpressionAttributeValues: { ':source': source },
-        KeyConditionExpression: '#source = :source'
+        KeyConditionExpression: '#source = :source',
+        ...(ExclusiveStartKey ? { ExclusiveStartKey } : {})
       });
 
       const dynamoDBResponse: ScanCommandOutput = await docClient.send(queryCommand);
