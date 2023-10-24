@@ -5,9 +5,10 @@ import { fromTask, getOrElse, map } from 'fp-ts/TaskEither';
 import { toSchemaLieuxDeMediationNumerique, LieuMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
 import { toTask } from '../../../fp-helpers';
 import { filterFromParsedQueryString, QueryFilter, scanAll } from '../../dynamo-db';
+import { toRawQueryString } from '../../gateway';
 import { failureResponse, gzipResponse, successResponse } from '../../responses';
-import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
 import { LieuInclusionNumeriqueStorage } from '../../storage';
+import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
 
 /**
  * @openapi
@@ -37,7 +38,7 @@ export const handler = async (
       scanAll<LieuMediationNumerique>(
         'cartographie-nationale.lieux-inclusion-numerique',
         filterFromParsedQueryString<LieuInclusionNumeriqueStorage>(
-          qs.parse(event.rawQueryString) as QueryFilter<LieuInclusionNumeriqueStorage>
+          qs.parse(toRawQueryString(event.queryStringParameters)) as QueryFilter<LieuInclusionNumeriqueStorage>
         )
       )
     ),
