@@ -1,7 +1,8 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { fromSchemaLieuDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
+import { findLieuById } from '../../../dynamo-db';
 import { successResponse } from '../../../responses';
 import { toISOStringDateMaj, upsertLieu } from '../../../storage';
 import { MergeGroupTransfer } from '../../../transfers';
@@ -39,13 +40,24 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
 
   try {
     await Promise.all(
-      mergeGroups.map(
-        async (mergeGroup: MergeGroupTransfer): Promise<PutCommandOutput> =>
-          await upsertLieu(docClient)({
-            ...toISOStringDateMaj(fromSchemaLieuDeMediationNumerique(mergeGroup.lieu)),
-            mergedIds: mergeGroup.mergedIds
-          })
-      )
+      mergeGroups.map(async (mergeGroup: MergeGroupTransfer): Promise<void> => {
+        await Promise.all(
+          mergeGroup.mergedIds.map(
+            async (mergedLieuId: string): Promise<PutCommandOutput> =>
+              await docClient.send(
+                new PutCommand({
+                  TableName: 'cartographie-nationale.lieux-inclusion-numerique',
+                  Item: { ...(await findLieuById(docClient)(mergedLieuId)), group: mergeGroup.groupId }
+                })
+              )
+          )
+        );
+
+        await upsertLieu(docClient)({
+          ...toISOStringDateMaj(fromSchemaLieuDeMediationNumerique(mergeGroup.lieu)),
+          mergedIds: mergeGroup.mergedIds
+        });
+      })
     );
 
     return successResponse({
@@ -60,20 +72,3 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     };
   }
 };
-
-// await Promise.all(
-//   mergeGroups.map((mergeGroup: MergeGroupTransfer) => {
-//     return mergeGroup.mergedIds.map(async (mergedLieuId: string): Promise<PutCommandOutput | undefined> => {
-//       const lieuInclusionNumeriqueFound: LieuInclusionNumeriqueStorage | undefined = await findLieuById(docClient)(
-//         mergedLieuId
-//       );
-//
-//       return docClient.send(
-//         new PutCommand({
-//           TableName: 'cartographie-nationale.lieux-inclusion-numerique',
-//           Item: { ...lieuInclusionNumeriqueFound, group: mergeGroup.groupId }
-//         })
-//       );
-//     });
-//   })
-// );
