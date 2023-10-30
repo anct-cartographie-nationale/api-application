@@ -41,7 +41,7 @@
   "devDependencies": {
     "@commitlint/cli": "^17.7.1",
     "@commitlint/config-conventional": "^17.7.0",
-    "@redocly/cli": "^1.2.0",
+    "@redocly/cli": "^1.4.0",
     "@types/aws-lambda": "^8.10.119",
     "@types/glob": "^8.1.0",
     "@types/node": "^20.5.9",

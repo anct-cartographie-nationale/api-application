@@ -1,6 +1,6 @@
 import { DynamoDBDocumentClient, QueryCommand, ScanCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { LieuInclusionNumeriqueStorage } from '../../storage';
+import { LieuInclusionNumeriqueStorage } from '../../../storage';
 
 export const allFingerprintsBySourceIndex =
   (docClient: DynamoDBDocumentClient = DynamoDBDocumentClient.from(new DynamoDBClient())) =>
