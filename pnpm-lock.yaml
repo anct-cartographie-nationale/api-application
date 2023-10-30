@@ -11,6 +11,9 @@ dependencies:
   '@aws-sdk/lib-dynamodb':
     specifier: ^3.409.0
     version: 3.410.0(@aws-sdk/client-dynamodb@3.410.0)
+  '@aws-sdk/util-dynamodb':
+    specifier: ^3.438.0
+    version: 3.438.0(@aws-sdk/client-dynamodb@3.410.0)
   '@gouvfr-anct/lieux-de-mediation-numerique':
     specifier: ^1.19.0
     version: 1.19.0
@@ -555,6 +558,16 @@ packages:
     resolution: {integrity: sha512-BHsiggDcotKWUgbv/ZIYGNRzGzkDnek7IRjyZJc/Bl7uA6EnOKAWDS86z+CjnEI9H0vbDnvihLiANdjEcNOa0w==}
     engines: {node: '>=14.0.0'}
     dependencies:
+      tslib: 2.6.2
+    dev: false
+
+  /@aws-sdk/util-dynamodb@3.438.0(@aws-sdk/client-dynamodb@3.410.0):
+    resolution: {integrity: sha512-K0r30mLy3iQe3qQVJxJAp+eOuoCmrO5KVodBoC5VT1ivjtYIgGxzUWphKhaqcASjmaE+Lg0UjHKjxWGOyAEC4A==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      '@aws-sdk/client-dynamodb': ^3.0.0
+    dependencies:
+      '@aws-sdk/client-dynamodb': 3.410.0
       tslib: 2.6.2
     dev: false
 
