@@ -1,10 +1,9 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { fromSchemaLieuDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
-import { findLieuById } from '../../../dynamo-db';
 import { successResponse } from '../../../responses';
-import { LieuInclusionNumeriqueStorage, toISOStringDateMaj, upsertLieu } from '../../../storage';
+import { toISOStringDateMaj, upsertLieu } from '../../../storage';
 import { MergeGroupTransfer } from '../../../transfers';
 
 /**
@@ -40,36 +39,41 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
 
   try {
     await Promise.all(
-      mergeGroups.map(async (mergeGroup: MergeGroupTransfer): Promise<void> => {
-        await Promise.all(
-          mergeGroup.mergedIds.map(async (mergedLieuId: string): Promise<PutCommandOutput | undefined> => {
-            const lieuInclusionNumeriqueFound: LieuInclusionNumeriqueStorage | undefined =
-              await findLieuById(docClient)(mergedLieuId);
-
-            return docClient.send(
-              new PutCommand({
-                TableName: 'cartographie-nationale.lieux-inclusion-numerique',
-                Item: { ...lieuInclusionNumeriqueFound, group: mergeGroup.groupId }
-              })
-            );
+      mergeGroups.map(
+        async (mergeGroup: MergeGroupTransfer): Promise<PutCommandOutput> =>
+          await upsertLieu(docClient)({
+            ...toISOStringDateMaj(fromSchemaLieuDeMediationNumerique(mergeGroup.lieu)),
+            mergedIds: mergeGroup.mergedIds
           })
-        );
-        await upsertLieu(docClient)({
-          ...toISOStringDateMaj(fromSchemaLieuDeMediationNumerique(mergeGroup.lieu)),
-          mergedIds: mergeGroup.mergedIds
-        });
-      })
+      )
     );
 
     return successResponse({
-      message: 'Le format des données fournies dans le body doit correspondre à un ensemble de groupes de fusion valide.'
+      message: 'Les groupes de fusion et la création des lieux fusionnés ont étés traités avec succès.'
     });
   } catch {
     return {
       statusCode: 422,
       body: JSON.stringify({
-        message: 'Le format des données fournies dans le body doit correspondre à un tableau empreintes numériques valide.'
+        message: 'Le format des données fournies dans le body doit correspondre à un ensemble de groupes de fusion valide.'
       })
     };
   }
 };
+
+// await Promise.all(
+//   mergeGroups.map((mergeGroup: MergeGroupTransfer) => {
+//     return mergeGroup.mergedIds.map(async (mergedLieuId: string): Promise<PutCommandOutput | undefined> => {
+//       const lieuInclusionNumeriqueFound: LieuInclusionNumeriqueStorage | undefined = await findLieuById(docClient)(
+//         mergedLieuId
+//       );
+//
+//       return docClient.send(
+//         new PutCommand({
+//           TableName: 'cartographie-nationale.lieux-inclusion-numerique',
+//           Item: { ...lieuInclusionNumeriqueFound, group: mergeGroup.groupId }
+//         })
+//       );
+//     });
+//   })
+// );

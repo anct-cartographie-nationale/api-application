@@ -1,4 +1,4 @@
-import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { LieuInclusionNumeriqueStorage } from '../lieu-inclusion-numerique.storage';
 import { reassignId } from '../../reassign-id/reassign-id';
 import { Id } from '@gouvfr-anct/lieux-de-mediation-numerique';
@@ -8,7 +8,10 @@ const UUID_NAMESPACE: string = '7dc3d274-abda-57fd-bd45-bf4adfeebcd3';
 
 export const upsertLieu =
   (docClient: DynamoDBDocumentClient) =>
-  (lieuInclusionNumerique: LieuInclusionNumeriqueStorage, lieuInclusionNumeriqueFound?: LieuInclusionNumeriqueStorage) =>
+  (
+    lieuInclusionNumerique: LieuInclusionNumeriqueStorage,
+    lieuInclusionNumeriqueFound?: LieuInclusionNumeriqueStorage
+  ): Promise<PutCommandOutput> =>
     docClient.send(
       new PutCommand({
         TableName: 'cartographie-nationale.lieux-inclusion-numerique',
