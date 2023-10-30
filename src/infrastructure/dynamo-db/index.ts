@@ -1,3 +1,3 @@
 export * from './filter';
-export * from './source-index';
+export * from './lieux-inclusion-numerique';
 export * from './scan-all';
