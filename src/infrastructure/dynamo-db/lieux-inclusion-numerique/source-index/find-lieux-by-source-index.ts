@@ -1,5 +1,5 @@
 import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
-import { LieuInclusionNumeriqueStorage } from '../../storage';
+import { LieuInclusionNumeriqueStorage } from '../../../storage';
 
 export const findLieuxBySourceIndex =
   (docClient: DynamoDBDocumentClient) =>
