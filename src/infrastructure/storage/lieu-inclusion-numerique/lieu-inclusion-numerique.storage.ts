@@ -3,10 +3,11 @@ import { ReassignedId } from '../reassign-id/reassign-id';
 
 export type ISOStringDateMaj<T> = Omit<T, 'date_maj'> & { date_maj: string };
 
-type MergeGroup = {
+type MergeInfo = {
   group?: string;
   mergedIds?: string[];
+  merged?: boolean;
 };
 
 export type LieuInclusionNumeriqueStorage = ReassignedId<ISOStringDateMaj<LieuMediationNumerique>> &
-  MergeGroup & { hash?: string };
+  MergeInfo & { hash?: string };
