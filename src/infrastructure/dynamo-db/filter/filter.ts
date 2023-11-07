@@ -1,4 +1,4 @@
-import { OperatorAlias, OperatorAliases, OPERATORS } from './operators';
+import { OperatorAlias, OperatorAliases, OPERATORS, attributeNotExistsOperator } from './operators';
 import { QueryCommandExpression, QueryCommandOperator } from './query-command';
 
 const onlyDefinedExpressions = (filterExpression: string | undefined): filterExpression is string => filterExpression != null;
@@ -56,17 +56,21 @@ const toQueryCommandExpression = <T extends TTable<T, TField>, TField extends Fi
 ): QueryCommandExpression =>
   mergeQueryCommandExpression(
     queryCommandExpression,
-    filterConfiguration.operator(filterConfiguration.field, filterConfiguration.value, index.toString())
+    filterConfiguration.operator(filterConfiguration.field, index.toString(), filterConfiguration.value)
   );
 
 export const filter = <T extends TTable<T, TField>, TField extends FieldsFrom<T> = FieldsFrom<T>>(
   ...filterConfigurations: FilterConfiguration<T, TField>[]
 ): QueryCommandExpression => filterConfigurations.reduce(toQueryCommandExpression, {});
 
-export const field = <T extends TTable<T, TField>, TField extends FieldsFrom<T>>(
+export const attribute = <T extends TTable<T, TField>, TField extends FieldsFrom<T>>(
   field: TField,
   operatorConfiguration: OperatorConfiguration<T[TField]>
 ): FilterConfiguration<T, TField> => ({ field, ...operatorConfiguration });
+
+export const attributeNotExists = <T extends TTable<T, TField>, TField extends FieldsFrom<T>>(
+  field: TField
+): FilterConfiguration<T, TField> => ({ field, value: {}, operator: attributeNotExistsOperator });
 
 const isValidOperator = (operator: string): operator is OperatorAlias => OperatorAliases.includes(operator);
 
@@ -100,8 +104,7 @@ const toFilterConfigurationFromParsedQuery =
 
 export const filterFromParsedQueryString = <T extends TTable<T, TField>, TField extends FieldsFrom<T> = FieldsFrom<T>>(
   filterFromQuery: Record<string, Record<OperatorAlias, Partial<T[TField]>>>
-): QueryCommandExpression => {
-  return filter<T, TField>(
+): QueryCommandExpression =>
+  filter<T, TField>(
     ...(Object.keys(filterFromQuery) as TField[]).reduce(toFilterConfigurationFromParsedQuery(filterFromQuery), [])
   );
-};

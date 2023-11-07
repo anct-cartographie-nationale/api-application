@@ -6,7 +6,7 @@ export type ISOStringDateMaj<T> = Omit<T, 'date_maj'> & { date_maj: string };
 type MergeInfo = {
   group?: string;
   mergedIds?: string[];
-  merged?: boolean;
+  deduplicated?: boolean;
 };
 
 export type LieuInclusionNumeriqueStorage = ReassignedId<ISOStringDateMaj<LieuMediationNumerique>> &

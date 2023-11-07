@@ -31,8 +31,8 @@ export const beginWithOperator: QueryCommandOperator = <
   TField extends Extract<keyof T, string> = Extract<keyof T, string>
 >(
   field: TField,
-  value: Partial<T[TField]>,
-  alias: string
+  alias: string,
+  value: Partial<T[TField]>
 ): QueryCommandExpression => ({
   ExpressionAttributeNames: { [`#${alias}`]: field },
   ExpressionAttributeValues:

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LieuInclusionNumeriqueStorage } from '../../storage';
 import { QueryCommandExpression } from './query-command';
-import { field, filter, filterFromParsedQueryString } from './filter';
+import { attributeNotExists, attribute, filter, filterFromParsedQueryString } from './filter';
 import { beginWith, equals } from './operators';
 
 describe('filter configuration for dynamodb scan command', (): void => {
@@ -12,7 +12,7 @@ describe('filter configuration for dynamodb scan command', (): void => {
   });
 
   it('should create a filter for a field equality', (): void => {
-    const filterSource: QueryCommandExpression = filter<LieuInclusionNumeriqueStorage>(field('source', equals('Angers')));
+    const filterSource: QueryCommandExpression = filter<LieuInclusionNumeriqueStorage>(attribute('source', equals('Angers')));
 
     expect(filterSource).toStrictEqual({
       ExpressionAttributeNames: { '#0': 'source' },
@@ -21,9 +21,19 @@ describe('filter configuration for dynamodb scan command', (): void => {
     });
   });
 
+  it('should create a filter for a field that do not exists', (): void => {
+    const filterSource: QueryCommandExpression = filter<LieuInclusionNumeriqueStorage>(attributeNotExists('source'));
+
+    expect(filterSource).toStrictEqual({
+      ExpressionAttributeNames: { '#0': 'source' },
+      ExpressionAttributeValues: {},
+      FilterExpression: `attribute_not_exists(#0)`
+    });
+  });
+
   it('should create a filter for a field that begins with a substring', (): void => {
     const filterCodeInsee: QueryCommandExpression = filter<LieuInclusionNumeriqueStorage>(
-      field('adresse', beginWith({ code_insee: '49' }))
+      attribute('adresse', beginWith({ code_insee: '49' }))
     );
 
     expect(filterCodeInsee).toStrictEqual({
@@ -35,8 +45,8 @@ describe('filter configuration for dynamodb scan command', (): void => {
 
   it('should create a filter for a field that combines equality and begins with a substring', (): void => {
     const filterSourceAndCodeInsee: QueryCommandExpression = filter<LieuInclusionNumeriqueStorage>(
-      field('source', equals('Angers')),
-      field('adresse', beginWith({ code_insee: '49' }))
+      attribute('source', equals('Angers')),
+      attribute('adresse', beginWith({ code_insee: '49' }))
     );
 
     expect(filterSourceAndCodeInsee).toStrictEqual({
@@ -48,7 +58,7 @@ describe('filter configuration for dynamodb scan command', (): void => {
 
   it('should create a filter for a field that combines multiple begins with for the same object', (): void => {
     const filterSourceAndCodeInsee: QueryCommandExpression = filter<LieuInclusionNumeriqueStorage>(
-      field('adresse', beginWith({ code_insee: '49', code_postal: '76' }))
+      attribute('adresse', beginWith({ code_insee: '49', code_postal: '76' }))
     );
 
     expect(filterSourceAndCodeInsee).toStrictEqual({
