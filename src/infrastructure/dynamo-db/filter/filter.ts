@@ -40,13 +40,23 @@ const mergeFilterExpression = (
     .filter(onlyDefinedExpressions)
     .join(' and ');
 
+const addExpressionAttributeValuesIfExist = (
+  queryCommandExpression: QueryCommandExpression,
+  nextQueryCommandExpression: QueryCommandExpression
+): QueryCommandExpression =>
+  [queryCommandExpression, nextQueryCommandExpression].every(
+    ({ ExpressionAttributeValues }: QueryCommandExpression): boolean => ExpressionAttributeValues == null
+  )
+    ? {}
+    : { ExpressionAttributeValues: mergeExpressionAttributeValues(queryCommandExpression, nextQueryCommandExpression) };
+
 const mergeQueryCommandExpression = (
   queryCommandExpression: QueryCommandExpression,
   nextQueryCommandExpression: QueryCommandExpression
 ): QueryCommandExpression => ({
   ExpressionAttributeNames: mergeExpressionAttributeNames(queryCommandExpression, nextQueryCommandExpression),
-  ExpressionAttributeValues: mergeExpressionAttributeValues(queryCommandExpression, nextQueryCommandExpression),
-  FilterExpression: mergeFilterExpression(queryCommandExpression, nextQueryCommandExpression)
+  FilterExpression: mergeFilterExpression(queryCommandExpression, nextQueryCommandExpression),
+  ...addExpressionAttributeValuesIfExist(queryCommandExpression, nextQueryCommandExpression)
 });
 
 const toQueryCommandExpression = <T extends TTable<T, TField>, TField extends FieldsFrom<T>>(

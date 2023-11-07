@@ -26,7 +26,6 @@ describe('filter configuration for dynamodb scan command', (): void => {
 
     expect(filterSource).toStrictEqual({
       ExpressionAttributeNames: { '#0': 'source' },
-      ExpressionAttributeValues: {},
       FilterExpression: `attribute_not_exists(#0)`
     });
   });
