@@ -100,6 +100,28 @@ describe('filter configuration for dynamodb scan command', (): void => {
     });
   });
 
+  it('should generate filter from JSON:API query with exists from query string set to true string', (): void => {
+    const filterSource: QueryCommandExpression = filterFromParsedQueryString<LieuInclusionNumeriqueStorage>({
+      source: { exists: 'true' }
+    });
+
+    expect(filterSource).toStrictEqual({
+      ExpressionAttributeNames: { '#0': 'source' },
+      FilterExpression: `attribute_exists(#0)`
+    });
+  });
+
+  it('should generate filter from JSON:API query with exists from query string set to false string', (): void => {
+    const filterSource: QueryCommandExpression = filterFromParsedQueryString<LieuInclusionNumeriqueStorage>({
+      source: { exists: 'false' }
+    });
+
+    expect(filterSource).toStrictEqual({
+      ExpressionAttributeNames: { '#0': 'source' },
+      FilterExpression: `attribute_not_exists(#0)`
+    });
+  });
+
   it('should generate filter from JSON:API query string with exists from query string set to true', (): void => {
     const filterSource: QueryCommandExpression = filterFromParsedQueryString<LieuInclusionNumeriqueStorage>({
       source: { exists: true }
