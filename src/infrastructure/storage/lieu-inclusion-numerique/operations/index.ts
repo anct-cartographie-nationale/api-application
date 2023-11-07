@@ -1,2 +1,2 @@
-export * from './mark-as-merged';
+export * from './mark-as-deduplicated';
 export * from './upsert-lieu';

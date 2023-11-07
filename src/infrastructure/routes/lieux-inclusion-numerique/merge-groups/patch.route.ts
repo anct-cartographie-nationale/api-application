@@ -2,9 +2,9 @@ import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { fromSchemaLieuDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
-import { equals, field, filter, findLieuById, scanAll } from '../../../dynamo-db';
+import { filter, findLieuById, scanAll, attributeNotExists } from '../../../dynamo-db';
 import { successResponse } from '../../../responses';
-import { LieuInclusionNumeriqueStorage, markAsMerged, toISOStringDateMaj, upsertLieu } from '../../../storage';
+import { LieuInclusionNumeriqueStorage, markAsDeduplicated, toISOStringDateMaj, upsertLieu } from '../../../storage';
 import { MergeGroupTransfer } from '../../../transfers';
 
 /**
@@ -62,10 +62,12 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
 
     const lieuxToMarkAsMerged: LieuInclusionNumeriqueStorage[] = await scanAll<LieuInclusionNumeriqueStorage>(
       'cartographie-nationale.lieux-inclusion-numerique',
-      filter<LieuInclusionNumeriqueStorage>(field('merged', equals(true)))
+      filter<LieuInclusionNumeriqueStorage>(attributeNotExists('deduplicated'))
     );
 
-    await Promise.all(lieuxToMarkAsMerged.map(async (lieu: LieuInclusionNumeriqueStorage) => markAsMerged(docClient)(lieu)));
+    await Promise.all(
+      lieuxToMarkAsMerged.map(async (lieu: LieuInclusionNumeriqueStorage) => markAsDeduplicated(docClient)(lieu))
+    );
 
     return successResponse({
       message: 'Les groupes de fusion et la création des lieux fusionnés ont étés traités avec succès.'
