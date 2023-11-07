@@ -66,7 +66,9 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     );
 
     await Promise.all(
-      lieuxToMarkAsMerged.map(async (lieu: LieuInclusionNumeriqueStorage) => markAsDeduplicated(docClient)(lieu))
+      lieuxToMarkAsMerged.map(
+        async (lieu: LieuInclusionNumeriqueStorage): Promise<PutCommandOutput> => markAsDeduplicated(docClient)(lieu)
+      )
     );
 
     return successResponse({

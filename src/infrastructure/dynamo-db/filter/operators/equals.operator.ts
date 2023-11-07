@@ -2,11 +2,12 @@ import { QueryCommandExpression, QueryCommandOperator } from '../query-command';
 
 export const equalsOperator: QueryCommandOperator = <
   T extends Record<string, unknown>,
-  TField extends Extract<keyof T, string> = Extract<keyof T, string>
+  TField extends Extract<keyof T, string> = Extract<keyof T, string>,
+  TValue = Partial<T[TField]>
 >(
   field: TField,
   alias: string,
-  value: Partial<T[TField]>
+  value: TValue
 ): QueryCommandExpression => ({
   ExpressionAttributeNames: { [`#${alias}`]: field },
   ExpressionAttributeValues: { [`:${alias}`]: value },

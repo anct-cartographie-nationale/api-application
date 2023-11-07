@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LieuInclusionNumeriqueStorage } from '../../storage';
 import { QueryCommandExpression } from './query-command';
-import { attributeNotExists, attribute, filter, filterFromParsedQueryString } from './filter';
+import { attributeNotExists, attribute, filter, filterFromParsedQueryString, attributeExists } from './filter';
 import { beginWith, equals } from './operators';
 
 describe('filter configuration for dynamodb scan command', (): void => {
@@ -27,6 +27,15 @@ describe('filter configuration for dynamodb scan command', (): void => {
     expect(filterSource).toStrictEqual({
       ExpressionAttributeNames: { '#0': 'source' },
       FilterExpression: `attribute_not_exists(#0)`
+    });
+  });
+
+  it('should create a filter for a field that exists', (): void => {
+    const filterSource: QueryCommandExpression = filter<LieuInclusionNumeriqueStorage>(attributeExists('source'));
+
+    expect(filterSource).toStrictEqual({
+      ExpressionAttributeNames: { '#0': 'source' },
+      FilterExpression: `attribute_exists(#0)`
     });
   });
 
@@ -67,7 +76,7 @@ describe('filter configuration for dynamodb scan command', (): void => {
     });
   });
 
-  it('should generate filter from JSON:API query string', (): void => {
+  it('should generate filter from JSON:API query string with eq and startswith from query string', (): void => {
     const filterSourceAndCodeInsee: QueryCommandExpression = filterFromParsedQueryString<LieuInclusionNumeriqueStorage>({
       source: { eq: 'Angers' },
       adresse: { startswith: { code_insee: '49' } }
@@ -77,6 +86,28 @@ describe('filter configuration for dynamodb scan command', (): void => {
       ExpressionAttributeNames: { '#0': 'source', '#1': 'adresse' },
       ExpressionAttributeValues: { ':0': 'Angers', ':10': '49' },
       FilterExpression: '#0 = :0 and begins_with(#1.code_insee, :10)'
+    });
+  });
+
+  it('should generate filter from JSON:API query string with exists from query string set to false', (): void => {
+    const filterSource: QueryCommandExpression = filterFromParsedQueryString<LieuInclusionNumeriqueStorage>({
+      source: { exists: false }
+    });
+
+    expect(filterSource).toStrictEqual({
+      ExpressionAttributeNames: { '#0': 'source' },
+      FilterExpression: `attribute_not_exists(#0)`
+    });
+  });
+
+  it('should generate filter from JSON:API query string with exists from query string set to true', (): void => {
+    const filterSource: QueryCommandExpression = filterFromParsedQueryString<LieuInclusionNumeriqueStorage>({
+      source: { exists: true }
+    });
+
+    expect(filterSource).toStrictEqual({
+      ExpressionAttributeNames: { '#0': 'source' },
+      FilterExpression: `attribute_exists(#0)`
     });
   });
 });

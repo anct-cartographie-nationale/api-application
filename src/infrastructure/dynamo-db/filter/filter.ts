@@ -1,4 +1,4 @@
-import { OperatorAlias, OperatorAliases, OPERATORS, attributeNotExistsOperator } from './operators';
+import { OperatorAlias, OperatorAliases, OPERATORS, attributeExistsOperator } from './operators';
 import { QueryCommandExpression, QueryCommandOperator } from './query-command';
 
 const onlyDefinedExpressions = (filterExpression: string | undefined): filterExpression is string => filterExpression != null;
@@ -7,14 +7,18 @@ type FieldsFrom<TTable> = Extract<keyof TTable, string>;
 
 type TTable<TTable, TField extends FieldsFrom<TTable>> = Record<string, TTable[TField]>;
 
-type OperatorConfiguration<T> = {
-  value: Partial<T>;
+type OperatorConfiguration<T, TValue = Partial<T>> = {
+  value: TValue;
   operator: QueryCommandOperator;
 };
 
-type FilterConfiguration<T extends TTable<T, TField>, TField extends FieldsFrom<T> = FieldsFrom<T>> = {
+type FilterConfiguration<
+  T extends TTable<T, TField>,
+  TField extends FieldsFrom<T> = FieldsFrom<T>,
+  TValue = Partial<T[TField]>
+> = {
   field: TField;
-} & OperatorConfiguration<T[TField]>;
+} & OperatorConfiguration<T[TField], TValue>;
 
 const mergeExpressionAttributeNames = (
   queryCommandExpression: QueryCommandExpression,
@@ -80,7 +84,11 @@ export const attribute = <T extends TTable<T, TField>, TField extends FieldsFrom
 
 export const attributeNotExists = <T extends TTable<T, TField>, TField extends FieldsFrom<T>>(
   field: TField
-): FilterConfiguration<T, TField> => ({ field, value: {}, operator: attributeNotExistsOperator });
+): FilterConfiguration<T, TField, boolean> => ({ field, value: false, operator: attributeExistsOperator });
+
+export const attributeExists = <T extends TTable<T, TField>, TField extends FieldsFrom<T>>(
+  field: TField
+): FilterConfiguration<T, TField, boolean> => ({ field, value: true, operator: attributeExistsOperator });
 
 const isValidOperator = (operator: string): operator is OperatorAlias => OperatorAliases.includes(operator);
 
