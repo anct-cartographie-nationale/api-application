@@ -7,6 +7,6 @@ export const markAsDeduplicated =
     docClient.send(
       new PutCommand({
         TableName: 'cartographie-nationale.lieux-inclusion-numerique',
-        Item: { ...lieuInclusionNumerique, merged: true }
+        Item: { ...lieuInclusionNumerique, deduplicated: true }
       })
     );
