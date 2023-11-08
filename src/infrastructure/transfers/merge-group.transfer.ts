@@ -1,4 +1,5 @@
-import { SchemaLieuMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
+import { SchemaLieuMediationNumerique, toSchemaLieuMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
+import { MergedLieuInclusionNumeriqueStorage } from '../storage';
 
 /**
  * @openapi
@@ -27,4 +28,16 @@ export type MergeGroupTransfer = {
   groupId: string;
   mergedIds: string[];
   lieu: SchemaLieuMediationNumerique;
+};
+
+export const mergeGroupTransferFormLieux = (lieux: MergedLieuInclusionNumeriqueStorage[]): MergeGroupTransfer[] => {
+  return lieux.map((lieu: MergedLieuInclusionNumeriqueStorage) => {
+    return {
+      groupId: lieu.group,
+      mergedIds: lieu.mergedIds,
+      lieu: {
+        ...toSchemaLieuMediationNumerique({ ...lieu, date_maj: new Date(lieu.date_maj) })
+      }
+    };
+  });
 };

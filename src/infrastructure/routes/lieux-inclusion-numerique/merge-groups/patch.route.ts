@@ -11,7 +11,7 @@ import { MergeGroupTransfer } from '../../../transfers';
  * @openapi
  * /lieux-inclusion-numerique/merge-groups:
  *   patch:
- *     summary: Mettre à jour les identifiants de groupes de fusion pour les lieux doublonnés.
+ *     summary: Mettre à jour les identifiants de groupes de fusion pour les lieux dupliqués.
  *     description: Cette opération permet d'associer des identifiants de groupes de fusion aux lieux pour lesquels des doublons ont étés détectés. Les fusions provoquent la création de nouveaux lieux agrégeant les informations les plus à jour des lieux fusionnés.
  *     operationId: lieux-inclusion-numerique-merge-groups.patch
  *     security:
@@ -55,7 +55,8 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
 
         await upsertLieu(docClient)({
           ...toISOStringDateMaj(fromSchemaLieuDeMediationNumerique(mergeGroup.lieu)),
-          mergedIds: mergeGroup.mergedIds
+          mergedIds: mergeGroup.mergedIds,
+          group: mergeGroup.groupId
         });
       })
     );
