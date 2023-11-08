@@ -32,7 +32,7 @@ import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
  */
 export const handler = async (
   event: APIGatewayProxyEventV2
-): Promise<APIGatewayProxyResultV2<LieuxInclusionNumeriqueTransfer>> =>
+): Promise<APIGatewayProxyResultV2<LieuxInclusionNumeriqueTransfer[]>> =>
   pipe(
     fromTask(() =>
       scanAll<LieuMediationNumerique>(
