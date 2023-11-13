@@ -5,7 +5,7 @@ import { toTask } from '../../../../fp-helpers';
 import { attributeExists, filter, scanAll } from '../../../dynamo-db';
 import { MergedLieuInclusionNumeriqueStorage } from '../../../storage';
 import { MergeGroupTransfer, mergeGroupTransferFormLieux } from '../../../transfers';
-import { failureResponse, successResponse } from '../../../responses';
+import { failureResponse, noCacheResponse, successResponse } from '../../../responses';
 
 /**
  * @openapi
@@ -37,5 +37,6 @@ export const handler = async (): Promise<APIGatewayProxyResultV2<MergeGroupTrans
     ),
     map(mergeGroupTransferFormLieux),
     map(successResponse),
+    map(noCacheResponse),
     getOrElse(toTask(failureResponse))
   )();
