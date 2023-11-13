@@ -1,6 +1,6 @@
-import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { LieuInclusionNumeriqueStorage } from '../../../storage';
-import { AttributeValue, GetItemCommand } from '@aws-sdk/client-dynamodb';
+import { AttributeValue } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 
 export const findLieuById =
@@ -9,9 +9,9 @@ export const findLieuById =
     unmarshall(
       (
         await docClient.send(
-          new GetItemCommand({
+          new GetCommand({
             TableName: 'cartographie-nationale.lieux-inclusion-numerique',
-            Key: { id: { S: id } }
+            Key: { id }
           })
         )
       ).Item as AttributeValue | Record<string, AttributeValue>

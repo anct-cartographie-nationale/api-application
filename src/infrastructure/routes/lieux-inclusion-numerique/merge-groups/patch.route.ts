@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DeleteCommand, DynamoDBDocumentClient, PutCommand, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommand, DynamoDBDocumentClient, PutCommand, PutCommandOutput, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { fromSchemaLieuDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
 import { filter, findLieuById, scanAll, attributeNotExists, findMergedLieuByGroupId } from '../../../dynamo-db';
 import { successResponse } from '../../../responses';
@@ -15,11 +15,12 @@ import { MergeGroupTransfer, MergeGroupsUpdateTransfer } from '../../../transfer
 
 const removeGroupFrom =
   (docClient: DynamoDBDocumentClient) =>
-  async ({ group, ...lieuWithoutGroup }: LieuInclusionNumeriqueStorage): Promise<PutCommandOutput> =>
+  async (lieu: LieuInclusionNumeriqueStorage): Promise<PutCommandOutput> =>
     await docClient.send(
-      new PutCommand({
+      new UpdateCommand({
         TableName: 'cartographie-nationale.lieux-inclusion-numerique',
-        Item: lieuWithoutGroup
+        Key: { id: lieu.id },
+        UpdateExpression: 'REMOVE group'
       })
     );
 
