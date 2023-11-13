@@ -13,7 +13,7 @@ import { MergeGroupTransfer } from './merge-group.transfer';
  *         mergeGroups:
  *           type: array
  *           items:
- *             $ref: '#/components/schemas/MergeGroupsUpdate'
+ *             $ref: '#/components/schemas/MergeGroup'
  *         groupIdsToDelete:
  *           type: array
  *           items:
