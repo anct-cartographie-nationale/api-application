@@ -17,7 +17,7 @@ const deleteLieu =
       })
     ).at(0);
 
-    if (mergedLieu != undefined && (mergedLieu.mergedIds ?? []).length < 2) {
+    if (mergedLieu != undefined && (mergedLieu.mergedIds ?? []).length <= 2) {
       await Promise.all(
         mergedLieu.mergedIds.map(
           async (lieuInGroupId: string): Promise<UpdateCommandOutput> =>
