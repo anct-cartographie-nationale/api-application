@@ -1,43 +1,59 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DeleteCommand, DynamoDBDocumentClient, UpdateCommand, UpdateCommandOutput } from '@aws-sdk/lib-dynamodb';
+import {
+  DeleteCommand,
+  DeleteCommandOutput,
+  DynamoDBDocumentClient,
+  PutCommand,
+  PutCommandOutput,
+  UpdateCommand,
+  UpdateCommandOutput
+} from '@aws-sdk/lib-dynamodb';
 import { scanAll } from '../../../dynamo-db';
 import { successResponse } from '../../../responses';
 import { MergedLieuInclusionNumeriqueStorage } from '../../../storage';
 import { FingerprintTransfer } from '../../../transfers';
 
-const deleteLieu =
+const deleteLieuById =
   (docClient: DynamoDBDocumentClient) =>
-  async (id: string): Promise<void> => {
-    const mergedLieu: MergedLieuInclusionNumeriqueStorage | undefined = (
-      await scanAll<MergedLieuInclusionNumeriqueStorage>('cartographie-nationale.lieux-inclusion-numerique', {
-        ExpressionAttributeNames: { '#mergedIds': 'mergedIds' },
-        ExpressionAttributeValues: { ':id': id },
-        FilterExpression: 'contains(#mergedIds, :id)'
+  (id: string): Promise<DeleteCommandOutput> =>
+    docClient.send(new DeleteCommand({ TableName: 'cartographie-nationale.lieux-inclusion-numerique', Key: { id } }));
+
+const onlyOutOf =
+  (idsToRemove: string[]) =>
+  (idToRemove: string): boolean =>
+    !idsToRemove.includes(idToRemove);
+
+const removeGroup =
+  (docClient: DynamoDBDocumentClient) =>
+  (id: string): Promise<UpdateCommandOutput> =>
+    docClient.send(
+      new UpdateCommand({
+        Key: { id },
+        TableName: 'cartographie-nationale.lieux-inclusion-numerique',
+        ExpressionAttributeNames: { '#group': 'group' },
+        UpdateExpression: 'REMOVE #group'
       })
-    ).at(0);
+    );
 
-    if (mergedLieu != undefined && (mergedLieu.mergedIds ?? []).length <= 2) {
-      await Promise.all(
-        mergedLieu.mergedIds.map(
-          async (lieuInGroupId: string): Promise<UpdateCommandOutput> =>
-            await docClient.send(
-              new UpdateCommand({
-                Key: { id: lieuInGroupId },
-                TableName: 'cartographie-nationale.lieux-inclusion-numerique',
-                ExpressionAttributeNames: { '#group': 'group' },
-                UpdateExpression: 'REMOVE #group'
-              })
-            )
-        )
-      );
+const updateMergedIds =
+  (docClient: DynamoDBDocumentClient) =>
+  (mergedLieu: MergedLieuInclusionNumeriqueStorage, mergedIds: string[]): Promise<PutCommandOutput> =>
+    docClient.send(
+      new PutCommand({ TableName: 'cartographie-nationale.lieux-inclusion-numerique', Item: { ...mergedLieu, mergedIds } })
+    );
 
-      await docClient.send(
-        new DeleteCommand({ TableName: 'cartographie-nationale.lieux-inclusion-numerique', Key: { id: mergedLieu.id } })
-      );
-    }
+const removeIdsFromMergedLieuFor =
+  (docClient: DynamoDBDocumentClient) =>
+  (idsToRemove: string[]) =>
+  async (mergedLieu: MergedLieuInclusionNumeriqueStorage): Promise<void> => {
+    const remainingIds: string[] = (mergedLieu.mergedIds ?? []).filter(onlyOutOf(idsToRemove));
+    await updateMergedIds(docClient)(mergedLieu, remainingIds);
 
-    await docClient.send(new DeleteCommand({ TableName: 'cartographie-nationale.lieux-inclusion-numerique', Key: { id } }));
+    if (remainingIds.length >= 2) return;
+
+    await Promise.all(remainingIds.map(removeGroup(docClient)));
+    await deleteLieuById(docClient)(mergedLieu.id);
   };
 
 const setHashToLieuMatching =
@@ -52,6 +68,21 @@ const setHashToLieuMatching =
         UpdateExpression: 'SET #hash = :hash'
       })
     );
+
+const onlyWithoutHash = (fingerprint: FingerprintTransfer): boolean => fingerprint.hash == null;
+
+const onlyWithHash = (fingerprint: FingerprintTransfer): boolean => fingerprint.hash != null;
+
+const toMergedLieuFor = async (id: string): Promise<MergedLieuInclusionNumeriqueStorage | undefined> =>
+  (
+    await scanAll<MergedLieuInclusionNumeriqueStorage>('cartographie-nationale.lieux-inclusion-numerique', {
+      ExpressionAttributeNames: { '#mergedIds': 'mergedIds' },
+      ExpressionAttributeValues: { ':id': id },
+      FilterExpression: 'contains(#mergedIds, :id)'
+    })
+  ).at(0);
+
+const onlyDefined = <T>(nullable: T | undefined): nullable is T => nullable != null;
 
 /**
  * @openapi
@@ -101,14 +132,28 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   });
 
   try {
+    const lieuxToRemoveIds: string[] = fingerprints
+      .filter(onlyWithoutHash)
+      .map((fingerprint: FingerprintTransfer): string => fingerprint.sourceId);
+
+    const fingerprintsWithHash: FingerprintTransfer[] = fingerprints.filter(onlyWithHash);
+
     await Promise.all(
-      fingerprints.map(
-        async (fingerprint: FingerprintTransfer): Promise<void | UpdateCommandOutput> =>
-          fingerprint.hash == null
-            ? await deleteLieu(docClient)(fingerprint.sourceId)
-            : await setHashToLieuMatching(docClient)(fingerprint)
+      fingerprintsWithHash.map(
+        async (fingerprint: FingerprintTransfer): Promise<UpdateCommandOutput> =>
+          await setHashToLieuMatching(docClient)(fingerprint)
       )
     );
+
+    await Promise.all(
+      lieuxToRemoveIds.map(async (id: string): Promise<DeleteCommandOutput> => await deleteLieuById(docClient)(id))
+    );
+
+    const mergedLieuxToUpdate: MergedLieuInclusionNumeriqueStorage[] = (
+      await Promise.all(lieuxToRemoveIds.map(toMergedLieuFor))
+    ).filter(onlyDefined);
+
+    await Promise.all(mergedLieuxToUpdate.map(removeIdsFromMergedLieuFor(docClient)(lieuxToRemoveIds)));
 
     return successResponse({
       message: 'Les empreintes numériques à associer aux lieux ou conduisant à leur suppression ont étés traités avec succès.'
