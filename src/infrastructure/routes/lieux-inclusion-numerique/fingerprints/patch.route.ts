@@ -6,12 +6,13 @@ import {
   DynamoDBDocumentClient,
   PutCommand,
   PutCommandOutput,
+  QueryCommand,
   UpdateCommand,
   UpdateCommandOutput
 } from '@aws-sdk/lib-dynamodb';
 import { scanAll } from '../../../dynamo-db';
 import { successResponse } from '../../../responses';
-import { MergedLieuInclusionNumeriqueStorage } from '../../../storage';
+import { LieuInclusionNumeriqueStorage, MergedLieuInclusionNumeriqueStorage } from '../../../storage';
 import { FingerprintTransfer } from '../../../transfers';
 
 const deleteLieuById =
@@ -56,18 +57,26 @@ const removeIdsFromMergedLieuFor =
     await deleteLieuById(docClient)(mergedLieu.id);
   };
 
-const setHashToLieuMatching =
+const findLieuxBySourceIndex =
   (docClient: DynamoDBDocumentClient) =>
-  async ({ sourceId: id, hash }: FingerprintTransfer): Promise<UpdateCommandOutput> =>
-    await docClient.send(
-      new UpdateCommand({
-        TableName: 'cartographie-nationale.lieux-inclusion-numerique',
-        Key: { id },
-        ExpressionAttributeNames: { '#hash': 'hash' },
-        ExpressionAttributeValues: { ':hash': hash },
-        UpdateExpression: 'SET #hash = :hash'
-      })
-    );
+  async (source: string, id: string): Promise<LieuInclusionNumeriqueStorage | undefined> =>
+    (
+      await docClient.send(
+        new QueryCommand({
+          TableName: 'cartographie-nationale.lieux-inclusion-numerique',
+          IndexName: 'source-index',
+          ExpressionAttributeNames: {
+            '#source': 'source',
+            '#sourceId': 'sourceId'
+          },
+          ExpressionAttributeValues: {
+            ':source': source,
+            ':sourceId': id
+          },
+          KeyConditionExpression: '#source = :source and #sourceId = :sourceId'
+        })
+      )
+    ).Items?.[0] as LieuInclusionNumeriqueStorage | undefined;
 
 const onlyWithoutHash = (fingerprint: FingerprintTransfer): boolean => fingerprint.hash == null;
 
@@ -83,6 +92,24 @@ const toMergedLieuFor = async (id: string): Promise<MergedLieuInclusionNumerique
   ).at(0);
 
 const onlyDefined = <T>(nullable: T | undefined): nullable is T => nullable != null;
+
+const toLieuWithHash =
+  (fingerprints: FingerprintTransfer[]) =>
+  (lieu: LieuInclusionNumeriqueStorage): LieuInclusionNumeriqueStorage => ({
+    ...lieu,
+    hash: fingerprints.find((fingerprint: FingerprintTransfer): boolean => fingerprint.sourceId === lieu.sourceId)?.hash ?? ''
+  });
+
+const updateItem =
+  (docClient: DynamoDBDocumentClient) =>
+  (lieu: LieuInclusionNumeriqueStorage): Promise<PutCommandOutput> =>
+    docClient.send(new PutCommand({ TableName: 'cartographie-nationale.lieux-inclusion-numerique', Item: lieu }));
+
+const toMatchingLieuIn =
+  (docClient: DynamoDBDocumentClient) =>
+  (source: string) =>
+  ({ sourceId }: FingerprintTransfer): Promise<LieuInclusionNumeriqueStorage | undefined> =>
+    findLieuxBySourceIndex(docClient)(source, sourceId);
 
 /**
  * @openapi
@@ -138,16 +165,15 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
 
     const fingerprintsWithHash: FingerprintTransfer[] = fingerprints.filter(onlyWithHash);
 
-    await Promise.all(
-      fingerprintsWithHash.map(
-        async (fingerprint: FingerprintTransfer): Promise<UpdateCommandOutput> =>
-          await setHashToLieuMatching(docClient)(fingerprint)
-      )
-    );
+    const lieux: LieuInclusionNumeriqueStorage[] = (
+      await Promise.all(fingerprintsWithHash.map(toMatchingLieuIn(docClient)(source)))
+    )
+      .filter(onlyDefined)
+      .map(toLieuWithHash(fingerprints));
 
-    await Promise.all(
-      lieuxToRemoveIds.map(async (id: string): Promise<DeleteCommandOutput> => await deleteLieuById(docClient)(id))
-    );
+    await Promise.all(lieux.map(updateItem(docClient)));
+
+    await Promise.all(lieuxToRemoveIds.map(deleteLieuById(docClient)));
 
     const mergedLieuxToUpdate: MergedLieuInclusionNumeriqueStorage[] = (
       await Promise.all(lieuxToRemoveIds.map(toMergedLieuFor))
