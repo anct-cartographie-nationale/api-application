@@ -50,7 +50,6 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
           const lieuInclusionNumeriqueFound: LieuInclusionNumeriqueStorage | undefined = await findLieuxBySourceIndex(
             docClient
           )(source, id);
-
           return upsertLieu(docClient)(toISOStringDateMaj(lieuInclusionNumerique), lieuInclusionNumeriqueFound);
         }
       )
