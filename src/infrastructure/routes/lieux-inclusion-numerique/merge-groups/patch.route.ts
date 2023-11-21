@@ -129,7 +129,8 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       })
     );
 
-    await Promise.all((await lieuxToDeduplicate()).map(markAsDeduplicated(docClient)));
+    event.queryStringParameters?.['markAsDeduplicated'] === 'true' &&
+      (await Promise.all((await lieuxToDeduplicate()).map(markAsDeduplicated(docClient))));
 
     return successResponse({
       message: 'Les groupes de fusion et la création des lieux fusionnés ont étés traités avec succès.'
