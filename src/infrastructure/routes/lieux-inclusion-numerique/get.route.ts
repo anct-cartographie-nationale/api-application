@@ -1,14 +1,27 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
+import { APIGatewayProxyEventQueryStringParameters } from 'aws-lambda/trigger/api-gateway-proxy';
 import qs from 'qs';
 import { pipe } from 'fp-ts/function';
 import { fromTask, getOrElse, map } from 'fp-ts/TaskEither';
-import { toSchemaLieuxDeMediationNumerique, LieuMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
+import { LieuMediationNumerique, toSchemaLieuxDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
 import { toTask } from '../../../fp-helpers';
-import { filterFromParsedQueryString, QueryFilter, scanAll } from '../../dynamo-db';
+import { filterFromParsedQueryString, QueryCommandExpression, QueryFilter, scanAll } from '../../dynamo-db';
 import { toRawQueryString } from '../../gateway';
 import { failureResponse, gzipResponse, successResponse } from '../../responses';
 import { LieuInclusionNumeriqueStorage } from '../../storage';
 import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
+
+const DEFAULT_FILTER: QueryCommandExpression = {
+  ExpressionAttributeNames: { '#group': 'group', '#mergedIds': 'mergedIds' },
+  FilterExpression: 'attribute_not_exists(#group) or attribute_exists(#mergedIds)'
+};
+
+const filterFromQueryString = (queryStringParameters?: APIGatewayProxyEventQueryStringParameters) =>
+  queryStringParameters == null
+    ? DEFAULT_FILTER
+    : filterFromParsedQueryString<LieuInclusionNumeriqueStorage>(
+        qs.parse(toRawQueryString(queryStringParameters)) as QueryFilter<LieuInclusionNumeriqueStorage>
+      );
 
 /**
  * @openapi
@@ -37,9 +50,7 @@ export const handler = async (
     fromTask(() =>
       scanAll<LieuMediationNumerique>(
         'cartographie-nationale.lieux-inclusion-numerique',
-        filterFromParsedQueryString<LieuInclusionNumeriqueStorage>(
-          qs.parse(toRawQueryString(event.queryStringParameters)) as QueryFilter<LieuInclusionNumeriqueStorage>
-        )
+        filterFromQueryString(event.queryStringParameters)
       )
     ),
     map(toSchemaLieuxDeMediationNumerique),
