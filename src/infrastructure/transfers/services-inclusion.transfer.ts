@@ -1,4 +1,5 @@
-import { SchemaServiceDataInclusion } from '@gouvfr-anct/lieux-de-mediation-numerique';
+import { SchemaServiceDataInclusion, toSchemaServiceDataInclusion } from '@gouvfr-anct/lieux-de-mediation-numerique';
+import { LieuInclusionNumeriqueStorage, toStringDateMaj } from '../storage';
 
 /**
  * @openapi
@@ -23,6 +24,25 @@ import { SchemaServiceDataInclusion } from '@gouvfr-anct/lieux-de-mediation-nume
  *         nom:
  *           type: string
  *           description: un nom pour le service considéré rendu par la structure. Il n'est pas nécessaire d'indiquer à nouveau le nom de la structure.
- *           example : "Accompagnement dans les démarches administratives"
+ *           example: "Accompagnement dans les démarches administratives"
+ *         group:
+ *           type: string
+ *           description: l'identifiant de groupe de fusion, il est unique pour chaque groupe de lieux impliqués dans une même fusion, les lieux résultants d'une fusion portent également cet identifiant.
+ *           example: "7fccf16ccd9d0d3ca7e9ddae7a0d378ea8699725b1f81e3ae20ccdc3d7883e3c"
+ *         mergedIds:
+ *           type: array
+ *           items:
+ *             description: Identifiants des lieux impliqués dans la fusion qui a conduit à la création de ce lieu.
+ *             type: string
+ *             example: "2abb32679ec9a9e60f7d4288c761aa58d0c35efcac21713e1445adc8d8bba7ab"
  */
-export type ServicesInclusionTransfer = SchemaServiceDataInclusion;
+export type ServicesInclusionTransfer = SchemaServiceDataInclusion & { group?: string; mergedIds?: string[] };
+
+export const toSchemaServicesDataInclusionWithGroups = (lieux: LieuInclusionNumeriqueStorage[]) =>
+  lieux.map(
+    (lieu: LieuInclusionNumeriqueStorage): ServicesInclusionTransfer => ({
+      ...toSchemaServiceDataInclusion(toStringDateMaj(lieu)),
+      ...(lieu.group == null ? {} : { group: lieu.group }),
+      ...(lieu.mergedIds == null ? {} : { mergedIds: lieu.mergedIds })
+    })
+  );

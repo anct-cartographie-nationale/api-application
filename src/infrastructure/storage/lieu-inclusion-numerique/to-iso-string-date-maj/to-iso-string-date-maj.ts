@@ -5,3 +5,8 @@ export const toISOStringDateMaj = (lieuInclusionNumerique: LieuMediationNumeriqu
   ...lieuInclusionNumerique,
   date_maj: lieuInclusionNumerique.date_maj.toISOString()
 });
+
+export const toStringDateMaj = (lieuInclusionNumeriqueStorage: LieuInclusionNumeriqueStorage): LieuMediationNumerique => ({
+  ...lieuInclusionNumeriqueStorage,
+  date_maj: new Date(lieuInclusionNumeriqueStorage.date_maj)
+});

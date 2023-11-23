@@ -3,12 +3,12 @@ import { APIGatewayProxyEventQueryStringParameters } from 'aws-lambda/trigger/ap
 import qs from 'qs';
 import { pipe } from 'fp-ts/function';
 import { fromTask, getOrElse, map } from 'fp-ts/TaskEither';
-import { LieuMediationNumerique, toSchemaLieuxDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
+import { toSchemaLieuxDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
 import { toTask } from '../../../fp-helpers';
 import { filterFromParsedQueryString, QueryCommandExpression, QueryFilter, scanAll } from '../../dynamo-db';
 import { toRawQueryString } from '../../gateway';
 import { failureResponse, gzipResponse, successResponse } from '../../responses';
-import { LieuInclusionNumeriqueStorage } from '../../storage';
+import { LieuInclusionNumeriqueStorage, toStringDateMaj } from '../../storage';
 import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
 
 const DEFAULT_FILTER: QueryCommandExpression = {
@@ -48,10 +48,13 @@ export const handler = async (
 ): Promise<APIGatewayProxyResultV2<LieuxInclusionNumeriqueTransfer[]>> =>
   pipe(
     fromTask(() =>
-      scanAll<LieuMediationNumerique>(
+      scanAll<LieuInclusionNumeriqueStorage>(
         'cartographie-nationale.lieux-inclusion-numerique',
         filterFromQueryString(event.queryStringParameters)
       )
+    ),
+    map((lieuxInclusionNumeriqueStorage: LieuInclusionNumeriqueStorage[]) =>
+      lieuxInclusionNumeriqueStorage.map(toStringDateMaj)
     ),
     map(toSchemaLieuxDeMediationNumerique),
     map(successResponse),
