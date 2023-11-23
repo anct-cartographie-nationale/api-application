@@ -1,11 +1,11 @@
 import { APIGatewayProxyResultV2 } from 'aws-lambda';
-import { toSchemaServicesDataInclusion, LieuMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
 import { pipe } from 'fp-ts/function';
 import { fromTask, getOrElse, map } from 'fp-ts/TaskEither';
 import { toTask } from '../../../fp-helpers';
 import { scanAll } from '../../dynamo-db';
 import { failureResponse, gzipResponse, successResponse } from '../../responses';
-import { ServicesInclusionTransfer } from '../../transfers';
+import { LieuInclusionNumeriqueStorage } from '../../storage';
+import { ServicesInclusionTransfer, toSchemaServicesDataInclusionWithGroups } from '../../transfers';
 
 /**
  * @openapi
@@ -29,8 +29,8 @@ import { ServicesInclusionTransfer } from '../../transfers';
  */
 export const handler = async (): Promise<APIGatewayProxyResultV2<ServicesInclusionTransfer>> =>
   pipe(
-    fromTask(() => scanAll<LieuMediationNumerique>('cartographie-nationale.lieux-inclusion-numerique')),
-    map(toSchemaServicesDataInclusion),
+    fromTask(() => scanAll<LieuInclusionNumeriqueStorage>('cartographie-nationale.lieux-inclusion-numerique')),
+    map(toSchemaServicesDataInclusionWithGroups),
     map(successResponse),
     map(gzipResponse),
     getOrElse(toTask(failureResponse))

@@ -1,4 +1,5 @@
-import { SchemaStructureDataInclusion } from '@gouvfr-anct/lieux-de-mediation-numerique';
+import { SchemaStructureDataInclusion, toSchemaStructureDataInclusion } from '@gouvfr-anct/lieux-de-mediation-numerique';
+import { LieuInclusionNumeriqueStorage, toStringDateMaj } from '../storage';
 
 /**
  * @openapi
@@ -45,5 +46,26 @@ import { SchemaStructureDataInclusion } from '@gouvfr-anct/lieux-de-mediation-nu
  *           type: string
  *           description: Ce champ contient la date, et optionnellement l'heure, à laquelle la donnée a été mise à jour.
  *           example: 2022-04-28
+ *         group:
+ *           type: string
+ *           description: l'identifiant de groupe de fusion, il est unique pour chaque groupe de lieux impliqués dans une même fusion, les lieux résultants d'une fusion portent également cet identifiant.
+ *           example: "7fccf16ccd9d0d3ca7e9ddae7a0d378ea8699725b1f81e3ae20ccdc3d7883e3c"
+ *         mergedIds:
+ *           type: array
+ *           items:
+ *             description: Identifiants des lieux impliqués dans la fusion qui a conduit à la création de ce lieu.
+ *             type: string
+ *             example: "2abb32679ec9a9e60f7d4288c761aa58d0c35efcac21713e1445adc8d8bba7ab"
  */
 export type StructuresInclusionTransfer = SchemaStructureDataInclusion;
+
+export const toSchemaStructuresDataInclusionWithGroups = (
+  lieux: LieuInclusionNumeriqueStorage[]
+): StructuresInclusionTransfer[] =>
+  lieux.map(
+    (lieu: LieuInclusionNumeriqueStorage): StructuresInclusionTransfer => ({
+      ...toSchemaStructureDataInclusion(toStringDateMaj(lieu)),
+      ...(lieu.group == null ? {} : { group: lieu.group }),
+      ...(lieu.mergedIds == null ? {} : { mergedIds: lieu.mergedIds })
+    })
+  );
