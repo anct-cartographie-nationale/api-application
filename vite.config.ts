@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import * as glob from 'glob';
 import * as path from 'path';
 
@@ -23,19 +23,26 @@ const getRoutesEntries = (): FilesInputOption =>
     {}
   );
 
-export default defineConfig({
-  build: {
-    outDir: 'dist',
-    lib: {
-      entry: getRoutesEntries(),
-      formats: ['es']
-    },
-    rollupOptions: {
-      external: /^@aws-sdk|zlib/,
-      output: {
-        entryFileNames: '[name].mjs',
-        chunkFileNames: 'chunks/[name].mjs'
+export default defineConfig(({ mode }) => {
+  const env: Record<string, string> = loadEnv(mode, process.cwd(), '');
+
+  return {
+    build: {
+      outDir: 'dist',
+      lib: {
+        entry: getRoutesEntries(),
+        formats: ['es']
+      },
+      rollupOptions: {
+        external: /^@aws-sdk|zlib/,
+        output: {
+          entryFileNames: '[name].mjs',
+          chunkFileNames: 'chunks/[name].mjs'
+        }
       }
+    },
+    define: {
+      $BASE_URL: env.BASE_URL
     }
-  }
+  };
 });
