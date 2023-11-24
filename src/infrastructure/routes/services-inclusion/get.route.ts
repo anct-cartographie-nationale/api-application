@@ -1,11 +1,21 @@
-import { APIGatewayProxyResultV2 } from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyResultV2 } from 'aws-lambda';
+import qs from 'qs';
 import { pipe } from 'fp-ts/function';
 import { fromTask, getOrElse, map } from 'fp-ts/TaskEither';
+import { env } from '../../../env';
 import { toTask } from '../../../fp-helpers';
-import { scanAll } from '../../dynamo-db';
+import { Paginated, paginationFromQueryString, scanPaginated } from '../../dynamo-db';
+import { toRawQueryString } from '../../gateway';
 import { failureResponse, gzipResponse, successResponse } from '../../responses';
 import { LieuInclusionNumeriqueStorage } from '../../storage';
 import { ServicesInclusionTransfer, toSchemaServicesDataInclusionWithGroups } from '../../transfers';
+
+const toPaginatedServicesInclusion = (
+  paginated: Paginated<LieuInclusionNumeriqueStorage>
+): Paginated<ServicesInclusionTransfer> => ({
+  ...paginated,
+  data: toSchemaServicesDataInclusionWithGroups(paginated.data)
+});
 
 /**
  * @openapi
@@ -27,10 +37,16 @@ import { ServicesInclusionTransfer, toSchemaServicesDataInclusionWithGroups } fr
  *               items:
  *                 $ref: '#/components/schemas/ServiceDataInclusion'
  */
-export const handler = async (): Promise<APIGatewayProxyResultV2<ServicesInclusionTransfer>> =>
+export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResultV2<ServicesInclusionTransfer>> =>
   pipe(
-    fromTask(() => scanAll<LieuInclusionNumeriqueStorage>('cartographie-nationale.lieux-inclusion-numerique')),
-    map(toSchemaServicesDataInclusionWithGroups),
+    fromTask(() =>
+      scanPaginated<LieuInclusionNumeriqueStorage>(
+        'cartographie-nationale.lieux-inclusion-numerique',
+        paginationFromQueryString(qs.parse(toRawQueryString(event.queryStringParameters))),
+        `${env.BASE_URL}${event.path}`
+      )
+    ),
+    map(toPaginatedServicesInclusion),
     map(successResponse),
     map(gzipResponse),
     getOrElse(toTask(failureResponse))

@@ -1,11 +1,21 @@
-import { APIGatewayProxyResultV2 } from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyResultV2 } from 'aws-lambda';
+import qs from 'qs';
 import { pipe } from 'fp-ts/function';
 import { fromTask, getOrElse, map } from 'fp-ts/TaskEither';
+import { env } from '../../../env';
 import { toTask } from '../../../fp-helpers';
-import { scanAll } from '../../dynamo-db';
+import { Paginated, paginationFromQueryString, scanPaginated } from '../../dynamo-db';
+import { toRawQueryString } from '../../gateway';
 import { failureResponse, gzipResponse, successResponse } from '../../responses';
 import { LieuInclusionNumeriqueStorage } from '../../storage';
 import { StructuresInclusionTransfer, toSchemaStructuresDataInclusionWithGroups } from '../../transfers';
+
+const toPaginatedStructuresInclusion = (
+  paginated: Paginated<LieuInclusionNumeriqueStorage>
+): Paginated<StructuresInclusionTransfer> => ({
+  ...paginated,
+  data: toSchemaStructuresDataInclusionWithGroups(paginated.data)
+});
 
 /**
  * @openapi
@@ -27,10 +37,18 @@ import { StructuresInclusionTransfer, toSchemaStructuresDataInclusionWithGroups 
  *               items:
  *                 $ref: '#/components/schemas/StructureDataInclusion'
  */
-export const handler = async (): Promise<APIGatewayProxyResultV2<StructuresInclusionTransfer>> =>
+export const handler = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResultV2<Paginated<StructuresInclusionTransfer>>> =>
   pipe(
-    fromTask(() => scanAll<LieuInclusionNumeriqueStorage>('cartographie-nationale.lieux-inclusion-numerique')),
-    map(toSchemaStructuresDataInclusionWithGroups),
+    fromTask(() =>
+      scanPaginated<LieuInclusionNumeriqueStorage>(
+        'cartographie-nationale.lieux-inclusion-numerique',
+        paginationFromQueryString(qs.parse(toRawQueryString(event.queryStringParameters))),
+        `${env.BASE_URL}${event.path}`
+      )
+    ),
+    map(toPaginatedStructuresInclusion),
     map(successResponse),
     map(gzipResponse),
     getOrElse(toTask(failureResponse))
