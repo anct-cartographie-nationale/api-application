@@ -16,5 +16,5 @@ export const scanPaginated = async <T>(
   return Paginated(
     Page({ totalElements: result.length, totalPages: Math.ceil(result.length / pagination.size), ...pagination }),
     url
-  )(result.slice(pagination.size * pagination.number, pagination.size));
+  )(result.slice(pagination.size * pagination.number, pagination.size * (pagination.number + 1)));
 };
