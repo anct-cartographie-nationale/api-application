@@ -12,9 +12,7 @@ export const scanPaginated = async <T>(
   docClient: DynamoDBDocumentClient = DynamoDBDocumentClient.from(new DynamoDBClient())
 ): Promise<Paginated<T>> => {
   const result: T[] = await scanAll<T>(TableName, filter, docClient);
+  const page: Page = Page(result, pagination);
 
-  return Paginated(
-    Page({ totalElements: result.length, totalPages: Math.ceil(result.length / pagination.size), ...pagination }),
-    url
-  )(result.slice(pagination.size * pagination.number, pagination.size * (pagination.number + 1)));
+  return Paginated(page, url)(result.slice(page.size * page.number, page.size * (page.number + 1)));
 };
