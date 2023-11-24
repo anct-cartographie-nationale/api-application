@@ -14,7 +14,7 @@ describe('pagination', (): void => {
       data: results,
       links: {
         first: 'https://example.com?page[number]=0&page[size]=100',
-        last: 'https://example.com?page[number]=10&page[size]=100',
+        last: 'https://example.com?page[number]=9&page[size]=100',
         next: 'https://example.com?page[number]=5&page[size]=100',
         prev: 'https://example.com?page[number]=3&page[size]=100',
         self: 'https://example.com?page[number]=4&page[size]=100'
@@ -35,7 +35,7 @@ describe('pagination', (): void => {
       data: results,
       links: {
         first: 'https://example.com?page[number]=0&page[size]=100',
-        last: 'https://example.com?page[number]=10&page[size]=100',
+        last: 'https://example.com?page[number]=9&page[size]=100',
         next: 'https://example.com?page[number]=1&page[size]=100',
         self: 'https://example.com?page[number]=0&page[size]=100'
       },
@@ -47,7 +47,7 @@ describe('pagination', (): void => {
     const results: number[] = [0, 1, 2, 3, 2, 4, 5, 6, 7, 8, 9];
 
     const paginated: Paginated<number> = Paginated(
-      Page({ number: 10, size: 100, totalElements: 976, totalPages: 10 }),
+      Page({ number: 9, size: 100, totalElements: 976, totalPages: 10 }),
       'https://example.com'
     )(results);
 
@@ -55,11 +55,11 @@ describe('pagination', (): void => {
       data: results,
       links: {
         first: 'https://example.com?page[number]=0&page[size]=100',
-        last: 'https://example.com?page[number]=10&page[size]=100',
-        prev: 'https://example.com?page[number]=9&page[size]=100',
-        self: 'https://example.com?page[number]=10&page[size]=100'
+        last: 'https://example.com?page[number]=9&page[size]=100',
+        prev: 'https://example.com?page[number]=8&page[size]=100',
+        self: 'https://example.com?page[number]=9&page[size]=100'
       },
-      meta: { number: 10, size: 100, totalElements: 976, totalPages: 10 }
+      meta: { number: 9, size: 100, totalElements: 976, totalPages: 10 }
     });
   });
 
@@ -75,7 +75,7 @@ describe('pagination', (): void => {
       data: results,
       links: {
         first: 'https://example.com?page[number]=0&page[size]=100',
-        last: 'https://example.com?page[number]=10&page[size]=100',
+        last: 'https://example.com?page[number]=9&page[size]=100',
         next: 'https://example.com?page[number]=1&page[size]=100',
         self: 'https://example.com?page[number]=0&page[size]=100'
       },
@@ -95,7 +95,7 @@ describe('pagination', (): void => {
       data: results,
       links: {
         first: 'https://example.com?page[number]=0&page[size]=1',
-        last: 'https://example.com?page[number]=10&page[size]=1',
+        last: 'https://example.com?page[number]=9&page[size]=1',
         next: 'https://example.com?page[number]=2&page[size]=1',
         prev: 'https://example.com?page[number]=0&page[size]=1',
         self: 'https://example.com?page[number]=1&page[size]=1'
@@ -116,11 +116,11 @@ describe('pagination', (): void => {
       data: results,
       links: {
         first: 'https://example.com?page[number]=0&page[size]=100',
-        last: 'https://example.com?page[number]=10&page[size]=100',
-        prev: 'https://example.com?page[number]=9&page[size]=100',
-        self: 'https://example.com?page[number]=10&page[size]=100'
+        last: 'https://example.com?page[number]=9&page[size]=100',
+        prev: 'https://example.com?page[number]=8&page[size]=100',
+        self: 'https://example.com?page[number]=9&page[size]=100'
       },
-      meta: { number: 10, size: 100, totalElements: 976, totalPages: 10 }
+      meta: { number: 9, size: 100, totalElements: 976, totalPages: 10 }
     });
   });
 
