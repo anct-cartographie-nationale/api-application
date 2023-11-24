@@ -66,8 +66,8 @@ const DEFAULT_PAGINATION: Pagination = {
 };
 
 const setMaxSize = (pagination: Pagination): Pagination => ({
-  number: pagination.number,
-  size: pagination.size > 10000 ? 10000 : pagination.size
+  number: +pagination.number,
+  size: +pagination.size > 10000 ? 10000 : +pagination.size
 });
 
 export const paginationFromQueryString = ({ page }: Record<string, unknown>): Pagination =>
