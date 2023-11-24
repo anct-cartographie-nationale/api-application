@@ -89,6 +89,23 @@ describe('pagination', (): void => {
     });
   });
 
+  it('should interpret page index equals to total pages as last page', (): void => {
+    const result: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+    const paginated: Paginated<number> = Paginated(Page(result, { number: 5, size: 2 }), 'https://example.com')(result);
+
+    expect(paginated).toStrictEqual({
+      data: result,
+      links: {
+        first: 'https://example.com?page[number]=0&page[size]=2',
+        last: 'https://example.com?page[number]=4&page[size]=2',
+        prev: 'https://example.com?page[number]=3&page[size]=2',
+        self: 'https://example.com?page[number]=4&page[size]=2'
+      },
+      meta: { number: 4, size: 2, totalElements: 10, totalPages: 5 }
+    });
+  });
+
   it('should interpret page index greater than total pages as last page', (): void => {
     const result: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 

@@ -26,13 +26,13 @@ type PageLinks = {
 
 const fixPaginationNumber = (number: number, totalPages: number): number => {
   if (number < 0) return 0;
-  if (number > totalPages) return totalPages - 1;
+  if (number >= totalPages) return totalPages - 1;
   return number;
 };
 
-const fixPagination = (pagination: Pagination, totalPages: number): Pagination => ({
-  number: fixPaginationNumber(pagination.number, totalPages),
-  size: pagination.size <= 0 ? 1 : pagination.size
+const fixPagination = ({ number, size }: Pagination, totalPages: number): Pagination => ({
+  number: fixPaginationNumber(number, totalPages),
+  size: size <= 0 ? 1 : size
 });
 
 const isValidPage = (page: Omit<Page, 'isPage'>): page is Page =>
@@ -42,8 +42,7 @@ export const Page = <T>(result: T[], pagination: Pagination): Page => {
   const page: Omit<Page, 'isPage'> = {
     totalPages: Math.ceil(result.length / pagination.size),
     totalElements: result.length,
-    number: pagination.number,
-    size: pagination.size
+    ...pagination
   };
 
   return isValidPage(page) ? page : Page(result, fixPagination(pagination, page.totalPages));
