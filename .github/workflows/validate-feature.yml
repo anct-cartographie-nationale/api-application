@@ -170,5 +170,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: 'Create env file'
+        run: |
+          touch .env
+          echo BASE_URL="${{ secrets.BASE_URL }}" >> .env
+
       - name: Build
         run: pnpm build
