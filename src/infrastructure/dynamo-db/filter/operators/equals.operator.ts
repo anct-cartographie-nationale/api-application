@@ -1,20 +1,11 @@
-import { QueryCommandExpression, QueryCommandOperator } from '../query-command';
+import { OperatorFilterExpression, OperatorWithValue } from './operators';
 
-export const equalsOperator: QueryCommandOperator = <
-  T extends Record<string, unknown>,
-  TField extends Extract<keyof T, string> = Extract<keyof T, string>,
-  TValue = Partial<T[TField]>
->(
-  field: TField,
-  alias: string,
-  value: TValue
-): QueryCommandExpression => ({
-  ExpressionAttributeNames: { [`#${alias}`]: field },
-  ExpressionAttributeValues: { [`:${alias}`]: value },
-  FilterExpression: `#${alias} = :${alias}`
-});
+export const equalFilterExpression: OperatorFilterExpression = (left: string, right: string): string =>
+  [left, right].join(' = ');
 
-export const equals = <TValue>(value: TValue): { value: TValue; operator: QueryCommandOperator } => ({
-  value,
-  operator: equalsOperator
+export const equals = <T, TAttribute extends keyof T = keyof T>(
+  value: Partial<T[TAttribute]>
+): OperatorWithValue<T, TAttribute> => ({
+  comparison: 'eq',
+  value
 });

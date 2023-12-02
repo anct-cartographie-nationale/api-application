@@ -1,11 +1,10 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { APIGatewayProxyEventQueryStringParameters } from 'aws-lambda/trigger/api-gateway-proxy';
-import qs from 'qs';
 import { pipe } from 'fp-ts/function';
 import { fromTask, getOrElse, map } from 'fp-ts/TaskEither';
 import { toSchemaLieuxDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
 import { toTask } from '../../../fp-helpers';
-import { filterFromParsedQueryString, QueryCommandExpression, QueryFilter, scanAll } from '../../dynamo-db';
+import { QueryCommandExpression, scanAll, queryStringFilter } from '../../dynamo-db';
 import { toRawQueryString } from '../../gateway';
 import { failureResponse, gzipResponse, successResponse } from '../../responses';
 import { LieuInclusionNumeriqueStorage, toStringDateMaj } from '../../storage';
@@ -17,11 +16,7 @@ const DEFAULT_FILTER: QueryCommandExpression = {
 };
 
 const filterFromQueryString = (queryStringParameters?: APIGatewayProxyEventQueryStringParameters) =>
-  queryStringParameters == null
-    ? DEFAULT_FILTER
-    : filterFromParsedQueryString<LieuInclusionNumeriqueStorage>(
-        qs.parse(toRawQueryString(queryStringParameters)) as QueryFilter<LieuInclusionNumeriqueStorage>
-      );
+  queryStringParameters == null ? DEFAULT_FILTER : queryStringFilter(toRawQueryString(queryStringParameters));
 
 /**
  * @openapi

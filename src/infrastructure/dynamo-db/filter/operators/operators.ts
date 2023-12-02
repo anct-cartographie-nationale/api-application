@@ -1,15 +1,20 @@
-import { QueryCommandOperator } from '../query-command';
-import { equalsOperator } from './equals.operator';
-import { beginWithOperator } from './begin-with.operator';
-import { attributeExistsOperator } from './attribute-exists.operator';
+import { equalFilterExpression } from './equals.operator';
+import { existsFilterExpression } from './attribute-exists.operator';
+import { notExistsFilterExpression } from './attribute-not-exists.operator';
+import { beginsWithFilterExpression } from './begin-with.operator';
 
-export type OperatorAlias = (typeof OperatorAliases)[number];
-export const OperatorAliases: string[] = ['eq', 'exists', 'startswith'];
+export type OperatorFilterExpression = (left: string, right: string) => string;
 
-export const OPERATORS: Record<OperatorAlias, QueryCommandOperator> = {
-  exists: attributeExistsOperator,
-  startswith: beginWithOperator,
-  eq: equalsOperator
+export type Comparison = 'eq' | 'exists' | 'notExists' | 'beginsWith';
+
+export type OperatorWithValue<T, TAttribute extends keyof T = keyof T> = {
+  comparison: Comparison;
+  value?: Partial<T[TAttribute]>;
 };
 
-export type QueryFilter<T> = Record<string, Record<OperatorAlias, Partial<T>>>;
+export const operatorFilterExpression: Record<Comparison, OperatorFilterExpression> = {
+  eq: equalFilterExpression,
+  exists: existsFilterExpression,
+  notExists: notExistsFilterExpression,
+  beginsWith: beginsWithFilterExpression
+};
