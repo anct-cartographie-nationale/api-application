@@ -1,24 +1,10 @@
-import { OperatorAlias, OperatorAliases, OPERATORS, attributeExistsOperator } from './operators';
-import { QueryCommandExpression, QueryCommandOperator } from './query-command';
+import { QueryCommandInput } from '@aws-sdk/lib-dynamodb';
+import { ConditionNode, QueryNode, Operator, isOperatorNode } from './abstract-syntax-tree';
+import { Comparison, operatorFilterExpression, OperatorWithValue } from './operators';
 
-const onlyDefinedExpressions = (filterExpression: string | undefined): filterExpression is string => filterExpression != null;
+export type QueryCommandExpression = Omit<QueryCommandInput, 'TableName'>;
 
-type FieldsFrom<TTable> = Extract<keyof TTable, string>;
-
-type TTable<TTable, TField extends FieldsFrom<TTable>> = Record<string, TTable[TField]>;
-
-type OperatorConfiguration<T, TValue = Partial<T>> = {
-  value: TValue;
-  operator: QueryCommandOperator;
-};
-
-type FilterConfiguration<
-  T extends TTable<T, TField>,
-  TField extends FieldsFrom<T> = FieldsFrom<T>,
-  TValue = Partial<T[TField]>
-> = {
-  field: TField;
-} & OperatorConfiguration<T[TField], TValue>;
+export type Filter<T, TAttribute extends keyof T = keyof T> = { attribute: TAttribute } & OperatorWithValue<T, TAttribute>;
 
 const mergeExpressionAttributeNames = (
   queryCommandExpression: QueryCommandExpression,
@@ -28,6 +14,20 @@ const mergeExpressionAttributeNames = (
   ...nextQueryCommandExpression.ExpressionAttributeNames
 });
 
+const onlyDefinedExpressions = (filterExpression: string | undefined): filterExpression is string => filterExpression != null;
+
+const needParenthesis = (operands: string[], isRoot: boolean) => operands.length > 1 && !isRoot;
+
+const applyParenthesis =
+  (isRoot: boolean, operator: Operator) =>
+  (operands: string[]): string =>
+    needParenthesis(operands, isRoot) ? `(${operands.join(` ${operator} `)})` : operands.join(` ${operator} `);
+
+const mergeFilterExpression =
+  (isRoot: boolean, operator: Operator) =>
+  ({ FilterExpression }: QueryCommandExpression, { FilterExpression: nextFilterExpression }: QueryCommandExpression): string =>
+    applyParenthesis(isRoot, operator)([FilterExpression, nextFilterExpression].filter(onlyDefinedExpressions));
+
 const mergeExpressionAttributeValues = (
   queryCommandExpression: QueryCommandExpression,
   nextQueryCommandExpression: QueryCommandExpression
@@ -35,14 +35,6 @@ const mergeExpressionAttributeValues = (
   ...queryCommandExpression.ExpressionAttributeValues,
   ...nextQueryCommandExpression.ExpressionAttributeValues
 });
-
-const mergeFilterExpression = (
-  queryCommandExpression: QueryCommandExpression,
-  nextQueryCommandExpression: QueryCommandExpression
-): string =>
-  [queryCommandExpression.FilterExpression, nextQueryCommandExpression.FilterExpression]
-    .filter(onlyDefinedExpressions)
-    .join(' and ');
 
 const addExpressionAttributeValuesIfExist = (
   queryCommandExpression: QueryCommandExpression,
@@ -56,73 +48,98 @@ const addExpressionAttributeValuesIfExist = (
 
 const mergeQueryCommandExpression = (
   queryCommandExpression: QueryCommandExpression,
-  nextQueryCommandExpression: QueryCommandExpression
+  nextQueryCommandExpression: QueryCommandExpression,
+  operator: Operator,
+  isRoot: boolean
 ): QueryCommandExpression => ({
   ExpressionAttributeNames: mergeExpressionAttributeNames(queryCommandExpression, nextQueryCommandExpression),
-  FilterExpression: mergeFilterExpression(queryCommandExpression, nextQueryCommandExpression),
+  FilterExpression: mergeFilterExpression(isRoot, operator)(queryCommandExpression, nextQueryCommandExpression),
   ...addExpressionAttributeValuesIfExist(queryCommandExpression, nextQueryCommandExpression)
 });
 
-const toQueryCommandExpression = <T extends TTable<T, TField>, TField extends FieldsFrom<T>>(
-  queryCommandExpression: QueryCommandExpression,
-  filterConfiguration: FilterConfiguration<T, TField>,
-  index: number
-): QueryCommandExpression =>
-  mergeQueryCommandExpression(
-    queryCommandExpression,
-    filterConfiguration.operator(filterConfiguration.field, index.toString(), filterConfiguration.value)
-  );
+const toExpressionAttributeValues =
+  (alias: string) =>
+  (queryCommandExpression: QueryCommandExpression, value: unknown, index: number): QueryCommandExpression => ({
+    ...queryCommandExpression,
+    [`:${alias}${index}`]: value
+  });
 
-export const filter = <T extends TTable<T, TField>, TField extends FieldsFrom<T> = FieldsFrom<T>>(
-  ...filterConfigurations: FilterConfiguration<T, TField>[]
-): QueryCommandExpression => filterConfigurations.reduce(toQueryCommandExpression, {});
+const expressionAttributeValuesFromObject = <
+  T,
+  TField extends Extract<keyof T, string>,
+  TValue extends object = Partial<T[TField]>
+>(
+  alias: string,
+  values: TValue
+): QueryCommandExpression => Object.values(values).reduce(toExpressionAttributeValues(alias), {});
 
-export const attribute = <T extends TTable<T, TField>, TField extends FieldsFrom<T>>(
-  field: TField,
-  operatorConfiguration: OperatorConfiguration<T[TField]>
-): FilterConfiguration<T, TField> => ({ field, ...operatorConfiguration });
+const comparisonPart =
+  (alias: string, comparison: Comparison) =>
+  <T>(value: T, index: number): string =>
+    operatorFilterExpression[comparison](`#${alias}.${value}`, `:${alias}${index}`);
 
-export const attributeNotExists = <T extends TTable<T, TField>, TField extends FieldsFrom<T>>(
-  field: TField
-): FilterConfiguration<T, TField, boolean> => ({ field, value: false, operator: attributeExistsOperator });
+const mergeWithPreviousFilterExpression =
+  (alias: string, comparison: Comparison) =>
+  <T>(filterExpression: string, value: T, index: number): string =>
+    [filterExpression, comparisonPart(alias, comparison)(value, index)].join(' and ');
 
-export const attributeExists = <T extends TTable<T, TField>, TField extends FieldsFrom<T>>(
-  field: TField
-): FilterConfiguration<T, TField, boolean> => ({ field, value: true, operator: attributeExistsOperator });
+const toFilterExpression =
+  (alias: string, comparison: Comparison) =>
+  <T>(filterExpression: string, value: T, index: number): string =>
+    filterExpression === ''
+      ? comparisonPart(alias, comparison)(value, index)
+      : `(${mergeWithPreviousFilterExpression(alias, comparison)(filterExpression, value, index)})`;
 
-const isValidOperator = (operator: string): operator is OperatorAlias => OperatorAliases.includes(operator);
+const filterExpressionFromObject = <T, TField extends Extract<keyof T, string>, TValue extends object = Partial<T[TField]>>(
+  alias: string,
+  comparison: Comparison,
+  values: TValue
+): string => Object.keys(values).reduce(toFilterExpression(alias, comparison), '');
 
-const filterConfiguration = <T extends TTable<T, TField>, TField extends FieldsFrom<T>>(
-  field: TField,
-  value: Partial<T[TField]>,
-  operator: QueryCommandOperator
-): FilterConfiguration<T, TField> => ({ field, value, operator });
+const fromNestedQueryCommandExpression =
+  <T>(operator: Operator, isRoot: boolean, index: string = '') =>
+  (
+    queryCommandExpression: QueryCommandExpression,
+    childFilter: QueryNode<Filter<T>>,
+    childIndex: number
+  ): QueryCommandExpression =>
+    mergeQueryCommandExpression(
+      queryCommandExpression,
+      toQueryCommandExpression(childFilter, `${index}${childIndex}`, false),
+      operator,
+      isRoot
+    );
 
-const toFilterConfigurations =
-  <T extends TTable<T, TField>, TField extends FieldsFrom<T>>(
-    field: TField,
-    filterFromQuery: Record<string, Record<OperatorAlias, Partial<T[TField]>>>
-  ) =>
-  (filterConfigurations: FilterConfiguration<T, TField>[], operatorAlias: OperatorAlias): FilterConfiguration<T, TField>[] => {
-    const value: Partial<T[TField]> | undefined = filterFromQuery[field]?.[operatorAlias];
-    const operator: QueryCommandOperator | undefined = OPERATORS[operatorAlias];
-    return isValidOperator(operatorAlias) && value != null && operator != null
-      ? [...filterConfigurations, filterConfiguration(field, value, operator)]
-      : [];
+const QueryCommandExpression = <T>(index: string, filter: ConditionNode<Filter<T>>): QueryCommandExpression => {
+  if (typeof filter.condition.value === 'object') {
+    return {
+      ExpressionAttributeNames: { [`#${index}`]: `${filter.condition.attribute.toString()}` },
+      ExpressionAttributeValues: expressionAttributeValuesFromObject(index, filter.condition.value),
+      FilterExpression: filterExpressionFromObject(index, filter.condition.comparison, filter.condition.value)
+    };
+  }
+
+  return {
+    ExpressionAttributeNames: { [`#${index}`]: `${filter.condition.attribute.toString()}` },
+    ...(filter.condition.value == null ? {} : { ExpressionAttributeValues: { [`:${index}`]: `${filter.condition.value}` } }),
+    FilterExpression: operatorFilterExpression[filter.condition.comparison](`#${index}`, `:${index}`)
   };
+};
 
-const toFilterConfigurationFromParsedQuery =
-  <T extends TTable<T, TField>, TField extends FieldsFrom<T>>(
-    filterFromQuery: Record<string, Record<OperatorAlias, Partial<T[TField]>>>
-  ) =>
-  (filterConfigurations: FilterConfiguration<T, TField>[], field: TField): FilterConfiguration<T, TField>[] => [
-    ...filterConfigurations,
-    ...Object.keys(filterFromQuery[field] ?? {}).reduce(toFilterConfigurations(field, filterFromQuery), [])
-  ];
-
-export const filterFromParsedQueryString = <T extends TTable<T, TField>, TField extends FieldsFrom<T> = FieldsFrom<T>>(
-  filterFromQuery: Record<string, Record<OperatorAlias, Partial<T[TField]>>>
+const toQueryCommandExpression = <T>(
+  filter: QueryNode<Filter<T>>,
+  index: string = '0',
+  isRoot: boolean = true
 ): QueryCommandExpression =>
-  filter<T, TField>(
-    ...(Object.keys(filterFromQuery) as TField[]).reduce(toFilterConfigurationFromParsedQuery(filterFromQuery), [])
-  );
+  isOperatorNode(filter)
+    ? filter.children.reduce(fromNestedQueryCommandExpression(filter.operator, isRoot, index), {})
+    : QueryCommandExpression(index, filter);
+
+const isSingle = <T>(elements: T[]): elements is [T] => elements.length == 1;
+
+const innerFilter = <T>(queryNodes: QueryNode<Filter<T>>[], operator: Operator): QueryCommandExpression =>
+  isSingle(queryNodes)
+    ? toQueryCommandExpression(queryNodes[0])
+    : queryNodes.reduce(fromNestedQueryCommandExpression(operator, true), {});
+
+export const filter = <T>(...queryNodes: QueryNode<Filter<T>>[]): QueryCommandExpression => innerFilter(queryNodes, 'and');

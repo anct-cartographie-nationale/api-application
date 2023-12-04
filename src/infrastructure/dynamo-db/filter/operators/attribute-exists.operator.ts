@@ -1,14 +1,8 @@
-import { QueryCommandExpression, QueryCommandOperator } from '../query-command';
+import { Condition, ConditionNode } from '../abstract-syntax-tree';
+import { Filter } from '../filter';
+import { OperatorFilterExpression } from './operators';
 
-export const attributeExistsOperator: QueryCommandOperator = <
-  T extends Record<string, unknown>,
-  TField extends Extract<keyof T, string>,
-  TValue = boolean
->(
-  field: TField,
-  alias: string,
-  value: TValue
-): QueryCommandExpression => ({
-  ExpressionAttributeNames: { [`#${alias}`]: field },
-  FilterExpression: value === true || value === 'true' ? `attribute_exists(#${alias})` : `attribute_not_exists(#${alias})`
-});
+export const existsFilterExpression: OperatorFilterExpression = (attribute: string): string => `attribute_exists(${attribute})`;
+
+export const attributeExists = <T, TAttribute extends keyof T = keyof T>(attribute: TAttribute): ConditionNode<Filter<T>> =>
+  Condition({ attribute, comparison: 'exists' });
