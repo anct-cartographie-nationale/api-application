@@ -9,5 +9,5 @@ const toQueryStringFrom =
       ? mergeQueryStringParameter(key, queryStringParameters[key])
       : [queryString, mergeQueryStringParameter(key, queryStringParameters[key])].join('&');
 
-export const toRawQueryString = (queryStringParameters: APIGatewayProxyEventQueryStringParameters | null): string =>
+export const toRawQueryString = (queryStringParameters: APIGatewayProxyEventQueryStringParameters | null = null): string =>
   queryStringParameters == null ? '' : Object.keys(queryStringParameters).reduce(toQueryStringFrom(queryStringParameters), '');

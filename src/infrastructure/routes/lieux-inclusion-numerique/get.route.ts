@@ -4,19 +4,30 @@ import { pipe } from 'fp-ts/function';
 import { fromTask, getOrElse, map } from 'fp-ts/TaskEither';
 import { toSchemaLieuxDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
 import { toTask } from '../../../fp-helpers';
-import { QueryCommandExpression, scanAll, queryStringFilter } from '../../dynamo-db';
+import {
+  QueryCommandExpression,
+  scanAll,
+  queryStringFilter,
+  filter,
+  attributeNotExists,
+  attributeExists,
+  or
+} from '../../dynamo-db';
 import { toRawQueryString } from '../../gateway';
 import { failureResponse, gzipResponse, successResponse } from '../../responses';
 import { LieuInclusionNumeriqueStorage, toStringDateMaj } from '../../storage';
 import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
 
-const DEFAULT_FILTER: QueryCommandExpression = {
-  ExpressionAttributeNames: { '#group': 'group', '#mergedIds': 'mergedIds' },
-  FilterExpression: 'attribute_not_exists(#group) or attribute_exists(#mergedIds)'
-};
+const DEFAULT_FILTER: QueryCommandExpression = filter<LieuInclusionNumeriqueStorage>(
+  or(attributeNotExists('group'), attributeExists('mergedIds'))
+);
 
-const filterFromQueryString = (queryStringParameters?: APIGatewayProxyEventQueryStringParameters) =>
-  queryStringParameters == null ? DEFAULT_FILTER : queryStringFilter(toRawQueryString(queryStringParameters));
+const filterFromQueryString = (queryStringParameters?: APIGatewayProxyEventQueryStringParameters): QueryCommandExpression =>
+  queryStringParameters == null
+    ? DEFAULT_FILTER
+    : queryStringFilter(
+        toRawQueryString({ ...queryStringParameters, 'and[or][mergedIds][exists]': 'true', 'and[or][group][exists]': 'false' })
+      );
 
 /**
  * @openapi

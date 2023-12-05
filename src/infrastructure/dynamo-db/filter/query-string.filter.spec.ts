@@ -88,7 +88,7 @@ describe('filter configuration for dynamodb scan command', (): void => {
   });
 
   it('should generate filter from JSON:API query string for one attribute with a nested object filter', (): void => {
-    const queryCommandExpression: QueryCommandExpression = queryStringFilter('or[adresse][beginsWith][code_insee]=49,38');
+    const queryCommandExpression: QueryCommandExpression = queryStringFilter('adresse[beginsWith][code_insee]=49,38');
 
     expect(queryCommandExpression).toStrictEqual({
       ExpressionAttributeNames: { '#00': 'adresse', '#01': 'adresse' },
