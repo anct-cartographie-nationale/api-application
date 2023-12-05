@@ -45,21 +45,26 @@ const toConditionalNestedJsonArray = <T>(node: ConditionalNestedJson<T>[]): Cond
 // eslint-disable-next-line @typescript-eslint/ban-types
 type Transformer = Function;
 
+const isOperator = (operator: string): operator is Operator => operator === 'and' || operator === 'or';
+
 const toASTOperator =
   <T extends object>(leafTransformer: Transformer) =>
-  ([operator]: [Partial<Operator>], conditionalNestedJsonNode: ConditionalNestedJsonNode<T>): QueryNode<T> => ({
-    operator,
-    children: toConditionalNestedJsonArray(conditionalNestedJsonNode[operator]!).flatMap(nestedJsonToAST<T>(leafTransformer))
-  });
+  (operators: string[], conditionalNestedJsonNode: Record<string, ConditionalNestedJson<T>[] | T[]>): QueryNode<T>[] =>
+    operators.map((operator: string): OperatorNode<T> => {
+      const item: ConditionalNestedJson<T>[] | T[] = conditionalNestedJsonNode[operator]!;
+      return isOperator(operator)
+        ? { operator, children: [...toConditionalNestedJsonArray(item).flatMap(nestedJsonToAST<T>(leafTransformer))] }
+        : or(...toConditionalNestedJsonArray([{ or: [{ [operator]: item }] }]).flatMap(nestedJsonToAST<T>(leafTransformer)));
+    });
 
-const hasBothOperators = (operators: [Partial<Operator>]): boolean => operators.length > 1;
+const hasBothOperators = (operators: string[]): boolean => operators.includes('or') && operators.includes('and');
 
 const withExtraAndFor = <T>(conditionalNestedJson: ConditionalNestedJsonNode<T>): ConditionalNestedJson<T> => ({
   and: [{ and: conditionalNestedJson.and! }, { or: conditionalNestedJson.or! }]
 });
 
 const nextConditionalNestedJsonNode =
-  <T extends object>(conditionalNestedJson: ConditionalNestedJsonNode<T>, operators: [Partial<Operator>]) =>
+  <T extends object>(conditionalNestedJson: Record<string, ConditionalNestedJson<T>[] | T[]>, operators: string[]) =>
   (leafTransformer: Transformer): QueryNode<T> | QueryNode<T>[] =>
     hasBothOperators(operators)
       ? nestedJsonToAST<T>(leafTransformer)(withExtraAndFor(conditionalNestedJson))

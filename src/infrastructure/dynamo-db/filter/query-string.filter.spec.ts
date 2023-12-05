@@ -97,6 +97,27 @@ describe('filter configuration for dynamodb scan command', (): void => {
     });
   });
 
+  it('should generate filter from JSON:API query string for one attribute with a nested object filter and a default filter', (): void => {
+    const queryCommandExpression: QueryCommandExpression = queryStringFilter(
+      'and[or][mergedIds][exists]=true&and[or][group][exists]=false&adresse[beginsWith][code_insee]=49,38'
+    );
+
+    expect(queryCommandExpression).toStrictEqual({
+      ExpressionAttributeNames: {
+        '#000': 'mergedIds',
+        '#001': 'group',
+        '#100': 'adresse',
+        '#101': 'adresse'
+      },
+      ExpressionAttributeValues: {
+        ':1000': '49',
+        ':1010': '38'
+      },
+      FilterExpression:
+        '(attribute_exists(#000) or attribute_not_exists(#001)) and (begins_with(#100.code_insee, :1000) or begins_with(#101.code_insee, :1010))'
+    });
+  });
+
   it('should generate filter from JSON:API query string for one attribute with one filter and multiple values from query string', (): void => {
     const queryCommandExpression: QueryCommandExpression = queryStringFilter('source[beginsWith]=A,B,C');
 

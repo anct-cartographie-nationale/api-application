@@ -97,10 +97,10 @@ const hasOperatorAttribute = (attributes: string[]): boolean => attributes.inclu
 
 const isSingle = <T>(elements: T[]): elements is [T] => elements.length == 1;
 
-const shouldAppendOr = (attributes: string[], transformed: qs.ParsedQs | string[]): boolean =>
-  isSingle(attributes) && !hasOperatorAttribute(attributes) && Object.keys(transformed[attributes[0]]).length === 1;
+const shouldAppendOr = (attributes: string[], transformed: qs.ParsedQs): boolean =>
+  isSingle(attributes) && !hasOperatorAttribute(attributes) && Object.keys(transformed[attributes[0]]!).length === 1;
 
 export const queryStringFilter = (queryString: string): QueryCommandExpression => {
-  const transformed = transformJSONTree(qs.parse(queryString));
+  const transformed: qs.ParsedQs = transformJSONTree(qs.parse(queryString)) as qs.ParsedQs;
   return toQueryCommandExpression(shouldAppendOr(Object.keys(transformed), transformed) ? { or: transformed } : transformed);
 };
