@@ -66,7 +66,7 @@ describe('abstract syntax tree', (): void => {
 
     const ast: QueryNode<String> | QueryNode<String>[] = nestedJsonToAST<String>()(conditionalNestedJson);
 
-    expect(ast).toStrictEqual(or(and(Condition('A'), Condition('B')), and(Condition('C'), Condition('D'), Condition('E'))));
+    expect(ast).toStrictEqual([or(and(Condition('A'), Condition('B')), and(Condition('C'), Condition('D'), Condition('E')))]);
   });
 
   it('should convert nested JSON objects to ast with and AND or in same node', (): void => {
@@ -76,19 +76,21 @@ describe('abstract syntax tree', (): void => {
 
     const ast: QueryNode<String>[] = nestedJsonToAST<String>()(conditionalNestedJson);
 
-    expect(ast).toStrictEqual({
-      operator: 'or',
-      children: [
-        { operator: 'and', children: [{ condition: 'A' }, { condition: 'B' }] },
-        {
-          operator: 'and',
-          children: [
-            { operator: 'and', children: [{ condition: 'C' }, { condition: 'D' }, { condition: 'E' }] },
-            { operator: 'or', children: [{ condition: 'F' }, { condition: 'G' }] }
-          ]
-        }
-      ]
-    });
+    expect(ast).toStrictEqual([
+      {
+        operator: 'or',
+        children: [
+          { operator: 'and', children: [{ condition: 'A' }, { condition: 'B' }] },
+          {
+            operator: 'and',
+            children: [
+              { operator: 'and', children: [{ condition: 'C' }, { condition: 'D' }, { condition: 'E' }] },
+              { operator: 'or', children: [{ condition: 'F' }, { condition: 'G' }] }
+            ]
+          }
+        ]
+      }
+    ]);
   });
 
   it('should build ast containing filter condition attribute', (): void => {
@@ -144,37 +146,39 @@ describe('abstract syntax tree', (): void => {
     const ast: QueryNode<Filter<LieuInclusionNumeriqueStorage>> | QueryNode<Filter<LieuInclusionNumeriqueStorage>>[] =
       nestedJsonToAST<Filter<LieuInclusionNumeriqueStorage>>()(conditionalNestedJson);
 
-    expect(ast).toStrictEqual({
-      operator: 'or',
-      children: [
-        {
-          operator: 'and',
-          children: [
-            { condition: { attribute: 'deduplicated', comparison: 'exists', value: true } },
-            { condition: { attribute: 'source', comparison: 'eq', value: 'Angers' } }
-          ]
-        },
-        {
-          operator: 'and',
-          children: [
-            {
-              operator: 'and',
-              children: [
-                { condition: { attribute: 'publics_accueillis', comparison: 'exists', value: true } },
-                { condition: { attribute: 'conditions_acces', comparison: 'exists', value: true } },
-                { condition: { attribute: 'labels_nationaux', comparison: 'exists', value: true } }
-              ]
-            },
-            {
-              operator: 'or',
-              children: [
-                { condition: { attribute: 'source', comparison: 'beginsWith', value: 'A' } },
-                { condition: { attribute: 'source', comparison: 'beginsWith', value: 'B' } }
-              ]
-            }
-          ]
-        }
-      ]
-    });
+    expect(ast).toStrictEqual([
+      {
+        operator: 'or',
+        children: [
+          {
+            operator: 'and',
+            children: [
+              { condition: { attribute: 'deduplicated', comparison: 'exists', value: true } },
+              { condition: { attribute: 'source', comparison: 'eq', value: 'Angers' } }
+            ]
+          },
+          {
+            operator: 'and',
+            children: [
+              {
+                operator: 'and',
+                children: [
+                  { condition: { attribute: 'publics_accueillis', comparison: 'exists', value: true } },
+                  { condition: { attribute: 'conditions_acces', comparison: 'exists', value: true } },
+                  { condition: { attribute: 'labels_nationaux', comparison: 'exists', value: true } }
+                ]
+              },
+              {
+                operator: 'or',
+                children: [
+                  { condition: { attribute: 'source', comparison: 'beginsWith', value: 'A' } },
+                  { condition: { attribute: 'source', comparison: 'beginsWith', value: 'B' } }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]);
   });
 });
