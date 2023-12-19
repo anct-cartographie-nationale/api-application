@@ -96,6 +96,9 @@ const filterExpressionFromObject = <T, TField extends Extract<keyof T, string>, 
   values: TValue
 ): string => Object.keys(values).reduce(toFilterExpression(alias, comparison), '');
 
+const removeEmptyQueryCommandExpression = (merged: QueryCommandExpression): QueryCommandExpression =>
+  merged.FilterExpression === '' ? {} : merged;
+
 const fromNestedQueryCommandExpression =
   <T>(operator: Operator, isRoot: boolean, index: string = '') =>
   (
@@ -103,14 +106,18 @@ const fromNestedQueryCommandExpression =
     childFilter: QueryNode<Filter<T>>,
     childIndex: number
   ): QueryCommandExpression =>
-    mergeQueryCommandExpression(
-      queryCommandExpression,
-      toQueryCommandExpression(childFilter, `${index}${childIndex}`, false),
-      operator,
-      isRoot
+    removeEmptyQueryCommandExpression(
+      mergeQueryCommandExpression(
+        queryCommandExpression,
+        toQueryCommandExpression(childFilter, `${index}${childIndex}`, false),
+        operator,
+        isRoot
+      )
     );
 
 const QueryCommandExpression = <T>(index: string, filter: ConditionNode<Filter<T>>): QueryCommandExpression => {
+  if (!Object.keys(operatorFilterExpression).includes(filter.condition.comparison)) return {};
+
   if (typeof filter.condition.value === 'object') {
     return {
       ExpressionAttributeNames: { [`#${index}`]: `${filter.condition.attribute.toString()}` },

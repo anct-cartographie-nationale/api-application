@@ -128,8 +128,6 @@ describe('filter configuration for dynamodb scan command', (): void => {
     });
   });
 
-  // todo: try with wrong comparison
-
   it('should generate filter from JSON:API query string with multiple nested conditions', (): void => {
     const queryCommandExpression: QueryCommandExpression = queryStringFilter(
       `or[0][and][0][deduplicated][exists]=true&or[0][and][1][source][eq]=Angers&or[1][and][0][publics_accueillis][exists]=true&or[1][and][0][conditions_acces][exists]=true&or[1][and][0][labels_nationaux][exists]=true&or[1][or][0][source][beginsWith]=A&or[1][or][1][source][beginsWith]=B`
@@ -149,5 +147,11 @@ describe('filter configuration for dynamodb scan command', (): void => {
         '(attribute_exists(#000) and #001 = :001) or (((attribute_exists(#0100) and attribute_exists(#0101)) and attribute_exists(#0102)) and (begins_with(#0110, :0110) or begins_with(#0111, :0111)))',
       ExpressionAttributeValues: { ':001': 'Angers', ':0110': 'A', ':0111': 'B' }
     });
+  });
+
+  it('should ignore filters without operators', (): void => {
+    const queryCommandExpression: QueryCommandExpression = queryStringFilter('cache=false');
+
+    expect(queryCommandExpression).toStrictEqual({});
   });
 });

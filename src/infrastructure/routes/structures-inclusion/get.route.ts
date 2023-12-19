@@ -4,7 +4,7 @@ import { pipe } from 'fp-ts/function';
 import { fromTask, getOrElse, map } from 'fp-ts/TaskEither';
 import { env } from '../../../env';
 import { toTask } from '../../../fp-helpers';
-import { Paginated, paginationFromQueryString, scanPaginated } from '../../dynamo-db';
+import { Paginated, paginationFromQueryString, queryStringFilter, scanPaginated } from '../../dynamo-db';
 import { toRawQueryString } from '../../gateway';
 import { failureResponse, gzipResponse, successResponse } from '../../responses';
 import { LieuInclusionNumeriqueStorage } from '../../storage';
@@ -45,7 +45,8 @@ export const handler = async (
       scanPaginated<LieuInclusionNumeriqueStorage>(
         'cartographie-nationale.lieux-inclusion-numerique',
         paginationFromQueryString(qs.parse(toRawQueryString(event.queryStringParameters))),
-        `${env.BASE_URL}${event.path}`
+        `${env.BASE_URL}${event.path}`,
+        queryStringFilter(toRawQueryString(event.queryStringParameters))
       )
     ),
     map(toPaginatedStructuresInclusion),

@@ -26,7 +26,7 @@ const filterFromQueryString = (queryStringParameters?: APIGatewayProxyEventQuery
   queryStringParameters == null
     ? DEFAULT_FILTER
     : queryStringFilter(
-        toRawQueryString({ ...queryStringParameters, 'and[or][mergedIds][exists]': 'true', 'and[or][group][exists]': 'false' })
+        toRawQueryString({ 'and[or][mergedIds][exists]': 'true', 'and[or][group][exists]': 'false', ...queryStringParameters })
       );
 
 /**
