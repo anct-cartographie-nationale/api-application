@@ -15,8 +15,8 @@ dependencies:
     specifier: ^3.438.0
     version: 3.454.0(@aws-sdk/client-dynamodb@3.454.0)
   '@gouvfr-anct/lieux-de-mediation-numerique':
-    specifier: ^1.21.0
-    version: 1.21.0
+    specifier: ^1.21.1
+    version: 1.21.1
   fp-ts:
     specifier: ^2.16.1
     version: 2.16.1
@@ -1096,8 +1096,8 @@ packages:
     resolution: {integrity: sha512-5Aap/GaRupgNx/feGBwLLTVv8OQFfv3pq2lPRzPg9R+IOBnDgghTGW7l7EuVXOvg5cc/xSAlRW8rBrjIC3Nvqw==}
     dev: true
 
-  /@gouvfr-anct/lieux-de-mediation-numerique@1.21.0:
-    resolution: {integrity: sha512-9nFsGVzOzjzcjvflr08wXqMCCI6pJz4+D+CWwkD8KaIUbTqr2d0JX/h+oMNmXMgApECgIPoI9aWXec0yw7OLLw==}
+  /@gouvfr-anct/lieux-de-mediation-numerique@1.21.1:
+    resolution: {integrity: sha512-ltfqyQiTefQB9sfCMoDsZSQV9UoWs26ucC8ElaA62Y2seOP+0E9K3Sx3Ej26AvLD8zuXhyYPRPjKtNuwz5i/eg==}
     dev: false
 
   /@humanwhocodes/config-array@0.11.13:
