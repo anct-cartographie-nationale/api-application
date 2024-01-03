@@ -184,7 +184,8 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     return successResponse({
       message: 'Les empreintes numériques à associer aux lieux ou conduisant à leur suppression ont étés traités avec succès.'
     });
-  } catch {
+  } catch (error) {
+    console.error(error);
     return {
       statusCode: 422,
       body: JSON.stringify({

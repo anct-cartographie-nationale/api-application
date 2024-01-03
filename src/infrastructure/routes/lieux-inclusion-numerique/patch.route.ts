@@ -58,7 +58,8 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     return successResponse({
       message: "Les lieux d'inclusion numérique à ajouter ou à modifier ont étés traités avec succès."
     });
-  } catch {
+  } catch (error) {
+    console.error(error);
     return {
       statusCode: 422,
       body: JSON.stringify({
