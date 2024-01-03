@@ -140,8 +140,8 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     return successResponse({
       message: 'Les groupes de fusion et la création des lieux fusionnés ont étés traités avec succès.'
     });
-  } catch (e) {
-    console.log(e);
+  } catch (error) {
+    console.error(error);
     return {
       statusCode: 422,
       body: JSON.stringify({
