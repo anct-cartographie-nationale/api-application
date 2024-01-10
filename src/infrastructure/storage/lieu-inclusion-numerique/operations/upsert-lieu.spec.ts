@@ -21,7 +21,7 @@ describe('upsert lieu', (): void => {
 
     const id: string = idForLieu(lieu);
 
-    expect(id).toBe('Hubik@75535fc4-981d-4320-9548-494ea6e4e7f7');
+    expect(id).toBe('Hubik_75535fc4-981d-4320-9548-494ea6e4e7f7');
   });
 
   it('should use original id for merged lieux', (): void => {
