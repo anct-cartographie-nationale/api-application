@@ -3,18 +3,15 @@ import { LieuInclusionNumeriqueStorage } from '../lieu-inclusion-numerique.stora
 import { reassignId } from '../../reassign-id/reassign-id';
 import { Id } from '@gouvfr-anct/lieux-de-mediation-numerique';
 
-export const idForLieu = (lieu: LieuInclusionNumeriqueStorage, lieuFound: LieuInclusionNumeriqueStorage | undefined): Id =>
-  lieuFound == undefined && lieu.mergedIds == null ? Id(`${lieu.source}@${lieu.id}`) : Id(lieu.id);
+export const idForLieu = (lieu: LieuInclusionNumeriqueStorage): Id =>
+  lieu.mergedIds == null ? Id(`${lieu.source}@${lieu.id}`) : Id(lieu.id);
 
 export const upsertLieu =
   (docClient: DynamoDBDocumentClient) =>
-  (
-    lieuInclusionNumerique: LieuInclusionNumeriqueStorage,
-    lieuInclusionNumeriqueFound?: LieuInclusionNumeriqueStorage
-  ): Promise<PutCommandOutput> =>
+  (lieuInclusionNumerique: LieuInclusionNumeriqueStorage): Promise<PutCommandOutput> =>
     docClient.send(
       new PutCommand({
         TableName: 'cartographie-nationale.lieux-inclusion-numerique',
-        Item: reassignId(lieuInclusionNumerique, idForLieu(lieuInclusionNumerique, lieuInclusionNumeriqueFound))
+        Item: reassignId(lieuInclusionNumerique, idForLieu(lieuInclusionNumerique))
       })
     );
