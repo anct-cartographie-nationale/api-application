@@ -19,7 +19,7 @@ describe('upsert lieu', (): void => {
       services: Services([Service.AccederADuMateriel])
     };
 
-    const id: string = idForLieu(lieu, null);
+    const id: string = idForLieu(lieu);
 
     expect(id).toBe('Hubik@75535fc4-981d-4320-9548-494ea6e4e7f7');
   });
@@ -41,28 +41,14 @@ describe('upsert lieu', (): void => {
       mergedIds: ['c2616e75-a870-5432-84e1-9242541d980c', 'dba6f39f-1cc2-58d4-8e5a-c784a998aac6']
     };
 
-    const id: string = idForLieu(lieu, null);
+    const id: string = idForLieu(lieu);
 
     expect(id).toBe('Hubik@75535fc4-981d-4320-9548-494ea6e4e7f7|Aidants-Connect@fa1565af16a51');
   });
 
-  it('should keep id when lieu already exist', (): void => {
-    const lieuFound: LieuInclusionNumeriqueStorage = {
-      id: Id('id-not-updated'),
-      pivot: Pivot('43493312300029'),
-      nom: Nom('Anonymal'),
-      adresse: Adresse({
-        commune: 'Reims',
-        code_postal: '51100',
-        voie: '12 BIS RUE DE LECLERCQ'
-      }),
-      source: 'Hubik',
-      date_maj: new Date('2022-06-02').toISOString(),
-      services: Services([Service.AccederADuMateriel])
-    };
-
+  it('should keep id when lieu has merged ids', (): void => {
     const lieu: LieuInclusionNumeriqueStorage = {
-      id: Id('id-not-updated'),
+      id: Id('merge between A and B'),
       pivot: Pivot('43493312300029'),
       nom: Nom('Anonymal'),
       adresse: Adresse({
@@ -72,11 +58,12 @@ describe('upsert lieu', (): void => {
       }),
       source: 'Hubik',
       date_maj: new Date('2022-06-02').toISOString(),
-      services: Services([Service.AccederADuMateriel])
+      services: Services([Service.AccederADuMateriel]),
+      mergedIds: ['A', 'B']
     };
 
-    const id: string = idForLieu(lieu, lieuFound);
+    const id: string = idForLieu(lieu);
 
-    expect(id).toBe('id-not-updated');
+    expect(id).toBe('merge between A and B');
   });
 });

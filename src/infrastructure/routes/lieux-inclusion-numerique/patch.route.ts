@@ -2,9 +2,8 @@ import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBDocumentClient, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { fromSchemaLieuxDeMediationNumerique, LieuMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
-import { findLieuxBySourceIndex } from '../../dynamo-db';
 import { successResponse } from '../../responses';
-import { LieuInclusionNumeriqueStorage, toISOStringDateMaj, upsertLieu } from '../../storage';
+import { toISOStringDateMaj, upsertLieu } from '../../storage';
 import { LieuxInclusionNumeriqueTransfer } from '../../transfers';
 
 /**
@@ -43,15 +42,8 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   try {
     await Promise.all(
       fromSchemaLieuxDeMediationNumerique(lieuxInclusionNumerique).map(
-        async (lieuInclusionNumerique: LieuMediationNumerique): Promise<PutCommandOutput> => {
-          const source: string = lieuInclusionNumerique.source ?? 'EMPTY_SOURCE';
-          const id: string = lieuInclusionNumerique.id;
-
-          const lieuInclusionNumeriqueFound: LieuInclusionNumeriqueStorage | undefined = await findLieuxBySourceIndex(
-            docClient
-          )(source, id);
-          return upsertLieu(docClient)(toISOStringDateMaj(lieuInclusionNumerique), lieuInclusionNumeriqueFound);
-        }
+        async (lieuInclusionNumerique: LieuMediationNumerique): Promise<PutCommandOutput> =>
+          upsertLieu(docClient)(toISOStringDateMaj(lieuInclusionNumerique))
       )
     );
 
