@@ -4,7 +4,7 @@ import { reassignId } from '../../reassign-id/reassign-id';
 import { Id } from '@gouvfr-anct/lieux-de-mediation-numerique';
 
 export const idForLieu = (lieu: LieuInclusionNumeriqueStorage): Id =>
-  lieu.mergedIds == null ? Id(`${lieu.source}_${lieu.id}`.replace(/\s+/, '-')) : Id(lieu.id);
+  lieu.mergedIds == null ? Id(`${lieu.source}_${lieu.id}`.replace(/\s+/gu, '-')) : Id(lieu.id);
 
 export const upsertLieu =
   (docClient: DynamoDBDocumentClient) =>
