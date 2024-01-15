@@ -33,8 +33,11 @@ const removeMergeGroup =
 
 const removeMergeGroupForAllLieuxIn =
   (docClient: DynamoDBDocumentClient) =>
-  async (ids: string[]): Promise<UpdateCommandOutput[]> =>
-    await Promise.all(ids.map(removeMergeGroup(docClient)));
+  async (ids: string[]): Promise<void> => {
+    for (const id of ids) {
+      await removeMergeGroup(docClient)(id);
+    }
+  };
 
 const deleteLieuById = (docClient: DynamoDBDocumentClient) => async (id: string) =>
   await docClient.send(new DeleteCommand({ TableName: 'cartographie-nationale.lieux-inclusion-numerique', Key: { id } }));
@@ -80,8 +83,11 @@ const setMergeGroupTo =
 
 const addMergeGroupForAllLieuxIn =
   (docClient: DynamoDBDocumentClient) =>
-  async ({ groupId, mergedIds }: MergeGroupTransfer): Promise<PutCommandOutput[]> =>
-    await Promise.all(mergedIds.map(setMergeGroupTo(docClient)(groupId)));
+  async ({ groupId, mergedIds }: MergeGroupTransfer): Promise<void> => {
+    for (const id of mergedIds) {
+      await setMergeGroupTo(docClient)(groupId)(id);
+    }
+  };
 
 /**
  * @openapi
@@ -113,29 +119,26 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   });
 
   try {
-    console.log('before remove merge groups', mergeGroupUpdate.groupIdsToDelete.length);
     for (const groupId of mergeGroupUpdate.groupIdsToDelete) {
-      console.log('remove', groupId);
       const mergedLieuToDelete: MergedLieuInclusionNumeriqueStorage | undefined = await findMergedLieuByGroupId(groupId);
       if (mergedLieuToDelete == null) continue;
       await removeMergeGroupForAllLieuxIn(docClient)(mergedLieuToDelete.mergedIds);
       await deleteLieuById(docClient)(mergedLieuToDelete.id);
     }
 
-    console.log('before add merge group and save merged lieux', mergeGroupUpdate.mergeGroups.length);
     for (const mergeGroup of mergeGroupUpdate.mergeGroups) {
       await addMergeGroupForAllLieuxIn(docClient)(mergeGroup);
       await saveMergedLieuFrom(docClient)(mergeGroup);
     }
 
-    console.log('before mark as deduplicated');
     if (event.queryStringParameters?.['markAsDeduplicated'] === 'true') {
       const lieux = await lieuxToDeduplicate();
       for (const lieu of lieux) {
-        console.log('mark', lieu.id, 'as deduplicated');
         await markAsDeduplicated(docClient)(lieu);
       }
     }
+
+    console.log('Les groupes de fusion et la création des lieux fusionnés ont étés traités avec succès.');
 
     return successResponse({
       message: 'Les groupes de fusion et la création des lieux fusionnés ont étés traités avec succès.'
