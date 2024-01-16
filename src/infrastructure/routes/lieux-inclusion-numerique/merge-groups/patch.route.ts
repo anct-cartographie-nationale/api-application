@@ -1,15 +1,8 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import {
-  DeleteCommand,
-  DynamoDBDocumentClient,
-  PutCommand,
-  PutCommandOutput,
-  UpdateCommand,
-  UpdateCommandOutput
-} from '@aws-sdk/lib-dynamodb';
+import { DynamoDBClient, TransactWriteItemsCommand } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, PutCommandOutput, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { fromSchemaLieuDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
-import { findMergedLieuByGroupId, scanAll } from '../../../dynamo-db';
+import { attribute, attributeExists, attributeNotExists, equals, filter, or, scanAll } from '../../../dynamo-db';
 import { successResponse } from '../../../responses';
 import {
   LieuInclusionNumeriqueStorage,
@@ -19,28 +12,32 @@ import {
 } from '../../../storage';
 import { MergeGroupsUpdateTransfer, MergeGroupTransfer } from '../../../transfers';
 
-const removeMergeGroup =
-  (docClient: DynamoDBDocumentClient) =>
-  async (id: string): Promise<UpdateCommandOutput> =>
-    await docClient.send(
-      new UpdateCommand({
-        Key: { id },
-        TableName: 'cartographie-nationale.lieux-inclusion-numerique',
-        ExpressionAttributeNames: { '#group': 'group' },
-        UpdateExpression: 'REMOVE #group'
-      })
-    );
+const TABLE_NAME = 'cartographie-nationale.lieux-inclusion-numerique' as const;
 
-const removeMergeGroupForAllLieuxIn =
+const saveMergedLieuFrom =
   (docClient: DynamoDBDocumentClient) =>
-  async (ids: string[]): Promise<void> => {
-    for (const id of ids) {
-      await removeMergeGroup(docClient)(id);
+  async (mergeGroup: MergeGroupTransfer): Promise<PutCommandOutput> =>
+    await upsertLieu(docClient)({
+      ...toISOStringDateMaj(fromSchemaLieuDeMediationNumerique(mergeGroup.lieu)),
+      mergedIds: mergeGroup.mergedIds,
+      group: mergeGroup.groupId
+    });
+
+const addMergeGroupForAllLieuxIn =
+  (docClient: DynamoDBDocumentClient) =>
+  async ({ groupId, mergedIds }: MergeGroupTransfer): Promise<void> => {
+    for (const id of mergedIds) {
+      await docClient.send(
+        new UpdateCommand({
+          Key: { id },
+          TableName: TABLE_NAME,
+          ExpressionAttributeNames: { '#group': 'group' },
+          ExpressionAttributeValues: { ':group': groupId },
+          UpdateExpression: 'SET #group = :group'
+        })
+      );
     }
   };
-
-const deleteLieuById = (docClient: DynamoDBDocumentClient) => async (id: string) =>
-  await docClient.send(new DeleteCommand({ TableName: 'cartographie-nationale.lieux-inclusion-numerique', Key: { id } }));
 
 const markAsDeduplicated =
   (docClient: DynamoDBDocumentClient) =>
@@ -52,42 +49,23 @@ const markAsDeduplicated =
       })
     );
 
-const lieuxToDeduplicate = async (): Promise<LieuInclusionNumeriqueStorage[]> =>
-  await scanAll<LieuInclusionNumeriqueStorage>('cartographie-nationale.lieux-inclusion-numerique', {
-    ExpressionAttributeNames: { '#0': 'deduplicated' },
-    FilterExpression: 'attribute_not_exists(#0)'
-  });
-
-const saveMergedLieuFrom =
-  (docClient: DynamoDBDocumentClient) =>
-  async (mergeGroup: MergeGroupTransfer): Promise<PutCommandOutput> =>
-    await upsertLieu(docClient)({
-      ...toISOStringDateMaj(fromSchemaLieuDeMediationNumerique(mergeGroup.lieu)),
-      mergedIds: mergeGroup.mergedIds,
-      group: mergeGroup.groupId
-    });
-
-const setMergeGroupTo =
-  (docClient: DynamoDBDocumentClient) =>
-  (groupId: string) =>
-  async (id: string): Promise<UpdateCommandOutput> =>
-    await docClient.send(
-      new UpdateCommand({
-        Key: { id },
-        TableName: 'cartographie-nationale.lieux-inclusion-numerique',
-        ExpressionAttributeNames: { '#group': 'group' },
-        ExpressionAttributeValues: { ':group': groupId },
-        UpdateExpression: 'SET #group = :group'
-      })
+const markAllAsDeduplicated = async (event: APIGatewayProxyEventV2, docClient: DynamoDBDocumentClient) => {
+  console.log('before mark as deduplicated');
+  if (event.queryStringParameters?.['markAsDeduplicated'] === 'true') {
+    const lieux: LieuInclusionNumeriqueStorage[] = await scanAll<LieuInclusionNumeriqueStorage>(
+      TABLE_NAME,
+      filter(attributeNotExists('deduplicated'))
     );
 
-const addMergeGroupForAllLieuxIn =
-  (docClient: DynamoDBDocumentClient) =>
-  async ({ groupId, mergedIds }: MergeGroupTransfer): Promise<void> => {
-    for (const id of mergedIds) {
-      await setMergeGroupTo(docClient)(groupId)(id);
-    }
-  };
+    for (const lieu of lieux) await markAsDeduplicated(docClient)(lieu);
+  }
+};
+
+function* chunks<T>(arr: T[], n: number): Generator<T[], void> {
+  for (let i = 0; i < arr.length; i += n) {
+    yield arr.slice(i, i + n);
+  }
+}
 
 /**
  * @openapi
@@ -119,24 +97,58 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
   });
 
   try {
-    for (const groupId of mergeGroupUpdate.groupIdsToDelete) {
-      const mergedLieuToDelete: MergedLieuInclusionNumeriqueStorage | undefined = await findMergedLieuByGroupId(groupId);
-      if (mergedLieuToDelete == null) continue;
-      await removeMergeGroupForAllLieuxIn(docClient)(mergedLieuToDelete.mergedIds);
-      await deleteLieuById(docClient)(mergedLieuToDelete.id);
+    console.log('before remove merge groups', mergeGroupUpdate.groupIdsToDelete.length);
+
+    const mergedLieuxToDeleteChunks: string[][] = Array.from(chunks(mergeGroupUpdate.groupIdsToDelete, 100));
+    let i = 0;
+
+    for (const mergedLieuxToDeleteChunk of mergedLieuxToDeleteChunks) {
+      i++;
+      console.log(`chunk ${i} / ${mergedLieuxToDeleteChunks.length}`);
+
+      const mergedLieuxToDelete: MergedLieuInclusionNumeriqueStorage[] = await scanAll<MergedLieuInclusionNumeriqueStorage>(
+        'cartographie-nationale.lieux-inclusion-numerique',
+        filter(
+          or(
+            ...mergedLieuxToDeleteChunk.map((groupId: string) =>
+              attribute<MergedLieuInclusionNumeriqueStorage>('group', equals(groupId))
+            )
+          ),
+          attributeExists('mergedIds')
+        )
+      );
+
+      for (const mergedLieuToDelete of mergedLieuxToDelete) {
+        await docClient.send(
+          new TransactWriteItemsCommand({
+            TransactItems: [
+              {
+                Delete: {
+                  TableName: TABLE_NAME,
+                  Key: { id: { S: mergedLieuToDelete.id } }
+                }
+              },
+              ...mergedLieuToDelete.mergedIds.map((id: string) => ({
+                Update: {
+                  Key: { id: { S: id } },
+                  TableName: TABLE_NAME,
+                  ExpressionAttributeNames: { '#group': 'group' },
+                  UpdateExpression: 'REMOVE #group'
+                }
+              }))
+            ]
+          })
+        );
+      }
     }
 
+    console.log('before add merge group and save merged lieux', mergeGroupUpdate.mergeGroups.length);
     for (const mergeGroup of mergeGroupUpdate.mergeGroups) {
       await addMergeGroupForAllLieuxIn(docClient)(mergeGroup);
       await saveMergedLieuFrom(docClient)(mergeGroup);
     }
 
-    if (event.queryStringParameters?.['markAsDeduplicated'] === 'true') {
-      const lieux = await lieuxToDeduplicate();
-      for (const lieu of lieux) {
-        await markAsDeduplicated(docClient)(lieu);
-      }
-    }
+    await markAllAsDeduplicated(event, docClient);
 
     console.log('Les groupes de fusion et la création des lieux fusionnés ont étés traités avec succès.');
 

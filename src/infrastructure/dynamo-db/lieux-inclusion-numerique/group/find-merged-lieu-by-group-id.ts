@@ -6,6 +6,6 @@ export const findMergedLieuByGroupId = async (groupId: string): Promise<MergedLi
   (
     await scanAll<MergedLieuInclusionNumeriqueStorage>(
       'cartographie-nationale.lieux-inclusion-numerique',
-      filter<MergedLieuInclusionNumeriqueStorage>(attributeExists('mergedIds'), attribute('group', equals(groupId)))
+      filter<MergedLieuInclusionNumeriqueStorage>(attribute('group', equals(groupId)), attributeExists('mergedIds'))
     )
   ).at(0);
