@@ -1,6 +1,7 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBClient, TransactWriteItemsCommand } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, PutCommandOutput, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommandOutput, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { marshall } from '@aws-sdk/util-dynamodb';
 import { fromSchemaLieuDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
 import { attribute, attributeExists, attributeNotExists, equals, filter, or, scanAll } from '../../../dynamo-db';
 import { successResponse } from '../../../responses';
@@ -39,16 +40,6 @@ const addMergeGroupForAllLieuxIn =
     }
   };
 
-const markAsDeduplicated =
-  (docClient: DynamoDBDocumentClient) =>
-  async (lieuInclusionNumerique: LieuInclusionNumeriqueStorage): Promise<PutCommandOutput> =>
-    await docClient.send(
-      new PutCommand({
-        TableName: 'cartographie-nationale.lieux-inclusion-numerique',
-        Item: { ...lieuInclusionNumerique, deduplicated: true }
-      })
-    );
-
 const markAllAsDeduplicated = async (event: APIGatewayProxyEventV2, docClient: DynamoDBDocumentClient) => {
   console.log('before mark as deduplicated');
   if (event.queryStringParameters?.['markAsDeduplicated'] === 'true') {
@@ -57,7 +48,28 @@ const markAllAsDeduplicated = async (event: APIGatewayProxyEventV2, docClient: D
       filter(attributeNotExists('deduplicated'))
     );
 
-    for (const lieu of lieux) await markAsDeduplicated(docClient)(lieu);
+    console.log(`Mark ${lieux.length} lieux as deduplicated`);
+
+    const lieuxChunks: LieuInclusionNumeriqueStorage[][] = Array.from(chunks(lieux, 10));
+    let i = 0;
+
+    for (const lieuxChunk of lieuxChunks) {
+      i++;
+      console.log(`chunk ${i} / ${lieuxChunks.length}`);
+
+      await docClient.send(
+        new TransactWriteItemsCommand({
+          TransactItems: [
+            ...lieuxChunk.map((lieu: LieuInclusionNumeriqueStorage) => ({
+              Put: {
+                TableName: TABLE_NAME,
+                Item: { ...marshall({ ...lieu, deduplicated: true }) }
+              }
+            }))
+          ]
+        })
+      );
+    }
   }
 };
 
