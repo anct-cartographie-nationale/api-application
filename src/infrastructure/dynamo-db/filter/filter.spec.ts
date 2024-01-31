@@ -4,6 +4,7 @@ import { and, or } from './abstract-syntax-tree';
 import { attribute } from './attribute';
 import { QueryCommandExpression, filter } from './filter';
 import { attributeExists, attributeNotExists, beginWith, equals } from './operators';
+import { notEquals } from './operators/not-equals.operator';
 
 describe('filter configuration for dynamodb scan command', (): void => {
   it('should filter nothing', (): void => {
@@ -158,6 +159,18 @@ describe('filter configuration for dynamodb scan command', (): void => {
       ExpressionAttributeNames: { '#0': 'adresse' },
       ExpressionAttributeValues: { ':00': '49' },
       FilterExpression: 'begins_with(#0.code_insee, :00)'
+    });
+  });
+
+  it('should create a filter for a field that is not equal to a value', (): void => {
+    const filterSource: QueryCommandExpression = filter<LieuInclusionNumeriqueStorage>(
+      attribute('source', notEquals('Angers'))
+    );
+
+    expect(filterSource).toStrictEqual({
+      ExpressionAttributeNames: { '#0': 'source' },
+      ExpressionAttributeValues: { ':0': 'Angers' },
+      FilterExpression: 'NOT #0 = :0'
     });
   });
 
