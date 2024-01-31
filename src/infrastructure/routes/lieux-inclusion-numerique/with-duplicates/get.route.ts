@@ -31,8 +31,10 @@ import { toRawQueryString } from '../../../gateway';
  */
 export const handler = async (
   event: APIGatewayProxyEventV2
-): Promise<APIGatewayProxyResultV2<LieuxInclusionNumeriqueTransfer[]>> =>
-  pipe(
+): Promise<APIGatewayProxyResultV2<LieuxInclusionNumeriqueTransfer[]>> => {
+  console.log(queryStringFilter(toRawQueryString(event.queryStringParameters)));
+
+  return pipe(
     fromTask(() =>
       scanAll<LieuInclusionNumeriqueStorage>(
         'cartographie-nationale.lieux-inclusion-numerique',
@@ -48,3 +50,4 @@ export const handler = async (
     map(noCacheResponse),
     getOrElse(toTask(failureResponse))
   )();
+};
