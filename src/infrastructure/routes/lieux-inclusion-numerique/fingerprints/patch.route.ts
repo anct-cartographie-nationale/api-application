@@ -145,6 +145,8 @@ const toMatchingLieuIn =
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
   const source: string | undefined = event.pathParameters?.['source'];
 
+  console.log('Update fingerprints for source', source);
+
   if (source == null) {
     return {
       statusCode: 422,
@@ -165,20 +167,30 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
 
     const fingerprintsWithHash: FingerprintTransfer[] = fingerprints.filter(onlyWithHash);
 
+    console.log(lieuxToRemoveIds.length, 'lieux to remove');
+    console.log(fingerprintsWithHash.length, 'lieux to update');
+
+    console.log('before find lieux matching fingerprints');
     const lieux: LieuInclusionNumeriqueStorage[] = (
       await Promise.all(fingerprintsWithHash.map(toMatchingLieuIn(docClient)(source)))
     )
       .filter(onlyDefined)
       .map(toLieuWithHash(fingerprints));
 
+    console.log(lieux.length, 'lieux matching fingerprints found');
+
+    console.log('before set fingerprint');
     await Promise.all(lieux.map(updateItem(docClient)));
 
+    console.log('before remove lieux');
     await Promise.all(lieuxToRemoveIds.map(deleteLieuById(docClient)));
 
+    console.log('before get merged lieux matching removed lieux');
     const mergedLieuxToUpdate: MergedLieuInclusionNumeriqueStorage[] = (
       await Promise.all(lieuxToRemoveIds.map(toMergedLieuFor))
     ).filter(onlyDefined);
 
+    console.log('before remove merged lieux');
     await Promise.all(mergedLieuxToUpdate.map(removeIdsFromMergedLieuFor(docClient)(lieuxToRemoveIds)));
 
     return successResponse({
