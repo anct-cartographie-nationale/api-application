@@ -53,8 +53,15 @@ const removeIdsFromMergedLieuFor =
 
     if (remainingIds.length >= 2) return;
 
-    await Promise.all(remainingIds.map(removeGroup(docClient)));
+    for (const remainingId of remainingIds) await removeGroup(docClient)(remainingId);
+
     await deleteLieuById(docClient)(mergedLieu.id);
+  };
+
+const removeMergedLieux =
+  (docClient: DynamoDBDocumentClient) =>
+  async (mergedLieuxToUpdate: MergedLieuInclusionNumeriqueStorage[], lieuxToRemoveIds: string[]) => {
+    for (const lieuToUpdate of mergedLieuxToUpdate) await removeIdsFromMergedLieuFor(docClient)(lieuxToRemoveIds)(lieuToUpdate);
   };
 
 const findLieuxBySourceIndex =
@@ -91,8 +98,6 @@ const toMergedLieuFor = async (id: string): Promise<MergedLieuInclusionNumerique
     })
   ).at(0);
 
-const onlyDefined = <T>(nullable: T | undefined): nullable is T => nullable != null;
-
 const toLieuWithHash =
   (fingerprints: FingerprintTransfer[]) =>
   (lieu: LieuInclusionNumeriqueStorage): LieuInclusionNumeriqueStorage => ({
@@ -110,6 +115,27 @@ const toMatchingLieuIn =
   (source: string) =>
   ({ sourceId }: FingerprintTransfer): Promise<LieuInclusionNumeriqueStorage | undefined> =>
     findLieuxBySourceIndex(docClient)(source, sourceId);
+
+const getMergedLieuxToUpdate = async (lieuxToRemoveIds: string[]) => {
+  const mergedLieuxToUpdate: MergedLieuInclusionNumeriqueStorage[] = [];
+  for (const id of lieuxToRemoveIds) {
+    const mergedLieu: MergedLieuInclusionNumeriqueStorage | undefined = await toMergedLieuFor(id);
+    mergedLieu && mergedLieuxToUpdate.push(mergedLieu);
+  }
+  return mergedLieuxToUpdate;
+};
+
+const lieuxMatchingFingerprints =
+  (docClient: DynamoDBDocumentClient) =>
+  async (fingerprintsWithHash: FingerprintTransfer[], source: string, fingerprints: FingerprintTransfer[]) => {
+    const lieux: LieuInclusionNumeriqueStorage[] = [];
+    for (const fingerprint of fingerprintsWithHash) {
+      const lieu: LieuInclusionNumeriqueStorage | undefined = await toMatchingLieuIn(docClient)(source)(fingerprint);
+      if (lieu == null) continue;
+      lieux.push(toLieuWithHash(fingerprints)(lieu));
+    }
+    return lieux;
+  };
 
 /**
  * @openapi
@@ -171,27 +197,21 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     console.log(fingerprintsWithHash.length, 'lieux to update');
 
     console.log('before find lieux matching fingerprints');
-    const lieux: LieuInclusionNumeriqueStorage[] = (
-      await Promise.all(fingerprintsWithHash.map(toMatchingLieuIn(docClient)(source)))
-    )
-      .filter(onlyDefined)
-      .map(toLieuWithHash(fingerprints));
+    const lieux = await lieuxMatchingFingerprints(docClient)(fingerprintsWithHash, source, fingerprints);
 
     console.log(lieux.length, 'lieux matching fingerprints found');
 
     console.log('before set fingerprint');
-    await Promise.all(lieux.map(updateItem(docClient)));
+    for (const lieu of lieux) await updateItem(docClient)(lieu);
 
     console.log('before remove lieux');
-    await Promise.all(lieuxToRemoveIds.map(deleteLieuById(docClient)));
+    for (const id of lieuxToRemoveIds) await deleteLieuById(docClient)(id);
 
     console.log('before get merged lieux matching removed lieux');
-    const mergedLieuxToUpdate: MergedLieuInclusionNumeriqueStorage[] = (
-      await Promise.all(lieuxToRemoveIds.map(toMergedLieuFor))
-    ).filter(onlyDefined);
+    const mergedLieuxToUpdate: MergedLieuInclusionNumeriqueStorage[] = await getMergedLieuxToUpdate(lieuxToRemoveIds);
 
     console.log('before remove merged lieux');
-    await Promise.all(mergedLieuxToUpdate.map(removeIdsFromMergedLieuFor(docClient)(lieuxToRemoveIds)));
+    await removeMergedLieux(docClient)(mergedLieuxToUpdate, lieuxToRemoveIds);
 
     return successResponse({
       message: 'Les empreintes numériques à associer aux lieux ou conduisant à leur suppression ont étés traités avec succès.'
