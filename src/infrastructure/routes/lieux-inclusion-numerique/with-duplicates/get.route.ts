@@ -1,13 +1,22 @@
-import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { pipe } from 'fp-ts/function';
 import { fromTask, getOrElse, map } from 'fp-ts/TaskEither';
-import { toSchemaLieuxDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
-import { queryStringFilter, scanAll } from '../../../dynamo-db';
+import qs from 'qs';
+import { SchemaLieuMediationNumerique, toSchemaLieuxDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
+import { env } from '../../../../env';
 import { toTask } from '../../../../fp-helpers';
+import { Paginated, paginationFromQueryString, queryStringFilter, scanPaginated } from '../../../dynamo-db';
 import { failureResponse, gzipResponse, noCacheResponse, successResponse } from '../../../responses';
 import { LieuInclusionNumeriqueStorage, toStringDateMaj } from '../../../storage';
 import { LieuxInclusionNumeriqueTransfer } from '../../../transfers';
 import { toRawQueryString } from '../../../gateway';
+
+const toPaginatedSchemaLieuxDeMediationNumerique = (
+  paginated: Paginated<LieuInclusionNumeriqueStorage>
+): Paginated<SchemaLieuMediationNumerique> => ({
+  ...paginated,
+  data: toSchemaLieuxDeMediationNumerique(paginated.data.map(toStringDateMaj))
+});
 
 /**
  * @openapi
@@ -30,19 +39,18 @@ import { toRawQueryString } from '../../../gateway';
  *                 $ref: '#/components/schemas/LieuInclusionNumerique'
  */
 export const handler = async (
-  event: APIGatewayProxyEventV2
+  event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResultV2<LieuxInclusionNumeriqueTransfer[]>> =>
   pipe(
     fromTask(() =>
-      scanAll<LieuInclusionNumeriqueStorage>(
+      scanPaginated<LieuInclusionNumeriqueStorage>(
         'cartographie-nationale.lieux-inclusion-numerique',
+        paginationFromQueryString(qs.parse(toRawQueryString(event.queryStringParameters))),
+        `${env.BASE_URL}${event.path}`,
         queryStringFilter(toRawQueryString(event.queryStringParameters))
       )
     ),
-    map((lieuxInclusionNumeriqueStorage: LieuInclusionNumeriqueStorage[]) =>
-      lieuxInclusionNumeriqueStorage.map(toStringDateMaj)
-    ),
-    map(toSchemaLieuxDeMediationNumerique),
+    map(toPaginatedSchemaLieuxDeMediationNumerique),
     map(successResponse),
     map(gzipResponse),
     map(noCacheResponse),
