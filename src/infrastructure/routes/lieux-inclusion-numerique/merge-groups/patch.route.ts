@@ -1,16 +1,10 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBClient, TransactWriteItemsCommand } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommandOutput, UpdateCommand } from '@aws-sdk/lib-dynamodb';
-import { marshall } from '@aws-sdk/util-dynamodb';
 import { fromSchemaLieuDeMediationNumerique } from '@gouvfr-anct/lieux-de-mediation-numerique';
-import { attribute, attributeExists, attributeNotExists, equals, filter, or, scanAll } from '../../../dynamo-db';
+import { attribute, attributeExists, equals, filter, or, scanAll } from '../../../dynamo-db';
 import { successResponse } from '../../../responses';
-import {
-  LieuInclusionNumeriqueStorage,
-  MergedLieuInclusionNumeriqueStorage,
-  toISOStringDateMaj,
-  upsertLieu
-} from '../../../storage';
+import { MergedLieuInclusionNumeriqueStorage, toISOStringDateMaj, upsertLieu } from '../../../storage';
 import { MergeGroupsUpdateTransfer, MergeGroupTransfer } from '../../../transfers';
 
 const TABLE_NAME = 'cartographie-nationale.lieux-inclusion-numerique' as const;
@@ -39,39 +33,6 @@ const addMergeGroupForAllLieuxIn =
       );
     }
   };
-
-const markAllAsDeduplicated = async (event: APIGatewayProxyEventV2, docClient: DynamoDBDocumentClient) => {
-  console.log('before mark as deduplicated');
-  if (event.queryStringParameters?.['markAsDeduplicated'] === 'true') {
-    const lieux: LieuInclusionNumeriqueStorage[] = await scanAll<LieuInclusionNumeriqueStorage>(
-      TABLE_NAME,
-      filter(attributeNotExists('deduplicated'))
-    );
-
-    console.log(`Mark ${lieux.length} lieux as deduplicated`);
-
-    const lieuxChunks: LieuInclusionNumeriqueStorage[][] = Array.from(chunks(lieux, 10));
-    let i = 0;
-
-    for (const lieuxChunk of lieuxChunks) {
-      i++;
-      console.log(`chunk ${i} / ${lieuxChunks.length}`);
-
-      await docClient.send(
-        new TransactWriteItemsCommand({
-          TransactItems: [
-            ...lieuxChunk.map((lieu: LieuInclusionNumeriqueStorage) => ({
-              Put: {
-                TableName: TABLE_NAME,
-                Item: { ...marshall({ ...lieu, deduplicated: true }) }
-              }
-            }))
-          ]
-        })
-      );
-    }
-  }
-};
 
 function* chunks<T>(arr: T[], n: number): Generator<T[], void> {
   for (let i = 0; i < arr.length; i += n) {
@@ -159,10 +120,6 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       await addMergeGroupForAllLieuxIn(docClient)(mergeGroup);
       await saveMergedLieuFrom(docClient)(mergeGroup);
     }
-
-    await markAllAsDeduplicated(event, docClient);
-
-    console.log('Les groupes de fusion et la création des lieux fusionnés ont étés traités avec succès.');
 
     return successResponse({
       message: 'Les groupes de fusion et la création des lieux fusionnés ont étés traités avec succès.'
