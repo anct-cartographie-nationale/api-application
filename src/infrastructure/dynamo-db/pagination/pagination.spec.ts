@@ -123,6 +123,22 @@ describe('pagination', (): void => {
     });
   });
 
+  it('should handle no results', (): void => {
+    const result: number[] = [];
+
+    const paginated: Paginated<number> = Paginated(Page(result, { number: 100, size: 2 }), 'https://example.com')(result);
+
+    expect(paginated).toStrictEqual({
+      data: result,
+      links: {
+        first: 'https://example.com?page[number]=0&page[size]=0',
+        last: 'https://example.com?page[number]=0&page[size]=0',
+        self: 'https://example.com?page[number]=0&page[size]=0'
+      },
+      meta: { number: 100, size: 2, totalElements: 0, totalPages: 0 }
+    });
+  });
+
   it('should get default pagination when there is no page', (): void => {
     const queryString: Record<string, unknown> = {};
 

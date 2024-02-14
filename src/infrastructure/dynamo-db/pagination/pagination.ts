@@ -35,16 +35,26 @@ const fixPagination = ({ number, size }: Pagination, totalPages: number): Pagina
   size: size <= 0 ? 1 : size
 });
 
+const isEmptyPage = (page: Omit<Page, 'isPage'>) => page.totalPages === 0 && page.totalElements === 0;
+
 const isValidPage = (page: Omit<Page, 'isPage'>): page is Page =>
-  page.number != null && page.number >= 0 && page.number < page.totalPages && page.size != null && page.size > 0;
+  (page.number != null && page.number >= 0 && page.number < page.totalPages && page.size != null && page.size > 0) ||
+  isEmptyPage(page);
+
+const emptyPage = (pagination: Pagination): Omit<Page, 'isPage'> => ({
+  totalPages: 0,
+  totalElements: 0,
+  ...pagination
+});
+
+const pageMetadata = <T>(result: T[], pagination: Pagination): Omit<Page, 'isPage'> => ({
+  totalPages: Math.ceil(result.length / pagination.size),
+  totalElements: result.length,
+  ...pagination
+});
 
 export const Page = <T>(result: T[], pagination: Pagination): Page => {
-  const page: Omit<Page, 'isPage'> = {
-    totalPages: Math.ceil(result.length / pagination.size),
-    totalElements: result.length,
-    ...pagination
-  };
-
+  const page: Omit<Page, 'isPage'> = result.length === 0 ? emptyPage(pagination) : pageMetadata(result, pagination);
   return isValidPage(page) ? page : Page(result, fixPagination(pagination, page.totalPages));
 };
 
@@ -62,9 +72,19 @@ const PageLinks = (page: Page, url: string): PageLinks => ({
   ...nextIfExist(page, url)
 });
 
+const emptyPageLinks = (url: string): PageLinks => ({
+  first: `${url}?page[number]=0&page[size]=0`,
+  last: `${url}?page[number]=0&page[size]=0`,
+  self: `${url}?page[number]=0&page[size]=0`
+});
+
 export const Paginated =
   (page: Page, url: string) =>
-  <T>(result: T[]): Paginated<T> => ({ meta: page, data: result, links: PageLinks(page, url) });
+  <T>(result: T[]): Paginated<T> => ({
+    meta: page,
+    data: result,
+    links: result.length === 0 ? emptyPageLinks(url) : PageLinks(page, url)
+  });
 
 const DEFAULT_PAGINATION: Pagination = {
   number: 0,
