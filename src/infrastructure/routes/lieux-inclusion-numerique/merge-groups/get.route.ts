@@ -1,11 +1,21 @@
-import { APIGatewayProxyResultV2 } from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { pipe } from 'fp-ts/function';
 import { fromTask, getOrElse, map } from 'fp-ts/TaskEither';
+import qs from 'qs';
+import { env } from '../../../../env';
 import { toTask } from '../../../../fp-helpers';
-import { attributeExists, filter, scanAll } from '../../../dynamo-db';
+import { attributeExists, filter, Paginated, paginationFromQueryString, scanPaginated } from '../../../dynamo-db';
 import { MergedLieuInclusionNumeriqueStorage } from '../../../storage';
 import { MergeGroupTransfer, mergeGroupTransferFormLieux } from '../../../transfers';
 import { failureResponse, noCacheResponse, successResponse } from '../../../responses';
+import { toRawQueryString } from '../../../gateway';
+
+const toPaginatedMergeGroupTransferFormLieux = (
+  paginated: Paginated<MergedLieuInclusionNumeriqueStorage>
+): Paginated<MergeGroupTransfer> => ({
+  ...paginated,
+  data: mergeGroupTransferFormLieux(paginated.data)
+});
 
 /**
  * @openapi
@@ -27,15 +37,17 @@ import { failureResponse, noCacheResponse, successResponse } from '../../../resp
  *               items:
  *                 $ref: '#/components/schemas/MergeGroup'
  */
-export const handler = async (): Promise<APIGatewayProxyResultV2<MergeGroupTransfer[]>> =>
+export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResultV2<MergeGroupTransfer[]>> =>
   pipe(
     fromTask(() =>
-      scanAll<MergedLieuInclusionNumeriqueStorage>(
+      scanPaginated<MergedLieuInclusionNumeriqueStorage>(
         'cartographie-nationale.lieux-inclusion-numerique',
+        paginationFromQueryString(qs.parse(toRawQueryString(event.queryStringParameters))),
+        `${env.BASE_URL}${event.path}`,
         filter<MergedLieuInclusionNumeriqueStorage>(attributeExists('mergedIds'), attributeExists('group'))
       )
     ),
-    map(mergeGroupTransferFormLieux),
+    map(toPaginatedMergeGroupTransferFormLieux),
     map(successResponse),
     map(noCacheResponse),
     getOrElse(toTask(failureResponse))
