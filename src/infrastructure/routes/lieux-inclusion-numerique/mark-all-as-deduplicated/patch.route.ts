@@ -47,12 +47,12 @@ function* chunks<T>(arr: T[], n: number): Generator<T[], void> {
  * /lieux-inclusion-numerique/mark-all-as-deduplicated:
  *   patch:
  *     summary: Mettre à jour l'indicateur de déduplication de l'ensemble des lieux.
- *    description: Cette opération permet d'indiquer que tous les lieux ont été dédupliqués, ainsi ce statut indique qu'en l'état ces lieux ne seront pas concernés par une prochaine fusion.
- *    operationId: lieux-inclusion-numerique-mark-all-as-deduplicated.patch
+ *     description: Cette opération permet d'indiquer que tous les lieux ont été dédupliqués, ainsi ce statut indique qu'en l'état ces lieux ne seront pas concernés par une prochaine fusion.
+ *     operationId: lieux-inclusion-numerique-mark-all-as-deduplicated.patch
  *     security:
  *       - ApiKeyAuthorization: []
  *     responses:
- *      400:
+ *       400:
  *         description: Erreur par défaut.
  *       200:
  *         description: Le marquage des lieux dédupliqués a été traité avec succès.
