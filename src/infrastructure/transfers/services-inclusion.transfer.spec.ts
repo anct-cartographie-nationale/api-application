@@ -17,7 +17,7 @@ describe('services inclusion transfer', (): void => {
         }),
         source: 'Hubik',
         date_maj: new Date('2022-06-02').toISOString(),
-        services: Services([Service.AccederADuMateriel])
+        services: Services([Service.AccesInternetEtMaterielInformatique])
       }
     ];
 
@@ -30,7 +30,7 @@ describe('services inclusion transfer', (): void => {
         nom: 'Médiation numérique',
         source: 'Hubik',
         structure_id: '75535fc4-981d-4320-9548-494ea6e4e7f7',
-        thematiques: ['numerique', 'numerique--acceder-a-du-materiel']
+        thematiques: ['numerique', 'numerique--acceder-a-une-connexion-internet', 'numerique--acceder-a-du-materiel']
       }
     ]);
   });
@@ -48,7 +48,7 @@ describe('services inclusion transfer', (): void => {
         }),
         source: 'Hubik',
         date_maj: new Date('2022-06-02').toISOString(),
-        services: Services([Service.AccederADuMateriel]),
+        services: Services([Service.AccesInternetEtMaterielInformatique]),
         group: '7fccf16ccd9d0d3ca7e9ddae7a0d378ea8699725b1f81e3ae20ccdc3d7883e3c'
       }
     ];
@@ -62,7 +62,7 @@ describe('services inclusion transfer', (): void => {
         nom: 'Médiation numérique',
         source: 'Hubik',
         structure_id: '75535fc4-981d-4320-9548-494ea6e4e7f7',
-        thematiques: ['numerique', 'numerique--acceder-a-du-materiel'],
+        thematiques: ['numerique', 'numerique--acceder-a-une-connexion-internet', 'numerique--acceder-a-du-materiel'],
         group: '7fccf16ccd9d0d3ca7e9ddae7a0d378ea8699725b1f81e3ae20ccdc3d7883e3c'
       }
     ]);
@@ -81,7 +81,7 @@ describe('services inclusion transfer', (): void => {
         }),
         source: 'Hubik',
         date_maj: new Date('2022-06-02').toISOString(),
-        services: Services([Service.AccederADuMateriel]),
+        services: Services([Service.AccesInternetEtMaterielInformatique]),
         group: '7fccf16ccd9d0d3ca7e9ddae7a0d378ea8699725b1f81e3ae20ccdc3d7883e3c',
         mergedIds: ['e4c9a4fc-a456-5645-4844-65d461ace651', '4acf5a15-44fa-9894-8465-f489f4ac984e']
       }
@@ -96,7 +96,7 @@ describe('services inclusion transfer', (): void => {
         nom: 'Médiation numérique',
         source: 'Hubik',
         structure_id: '75535fc4-981d-4320-9548-494ea6e4e7f7',
-        thematiques: ['numerique', 'numerique--acceder-a-du-materiel'],
+        thematiques: ['numerique', 'numerique--acceder-a-une-connexion-internet', 'numerique--acceder-a-du-materiel'],
         group: '7fccf16ccd9d0d3ca7e9ddae7a0d378ea8699725b1f81e3ae20ccdc3d7883e3c',
         mergedIds: ['e4c9a4fc-a456-5645-4844-65d461ace651', '4acf5a15-44fa-9894-8465-f489f4ac984e']
       }
