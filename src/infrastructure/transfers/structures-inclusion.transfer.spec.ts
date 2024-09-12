@@ -17,7 +17,7 @@ describe('structures inclusion transfer', (): void => {
         }),
         source: 'Hubik',
         date_maj: new Date('2022-06-02').toISOString(),
-        services: Services([Service.AccederADuMateriel])
+        services: Services([Service.AccesInternetEtMaterielInformatique])
       }
     ];
 
@@ -34,7 +34,7 @@ describe('structures inclusion transfer', (): void => {
         nom: 'Anonymal',
         siret: '43493312300029',
         source: 'Hubik',
-        thematiques: ['numerique', 'numerique--acceder-a-du-materiel']
+        thematiques: ['numerique', 'numerique--acceder-a-une-connexion-internet', 'numerique--acceder-a-du-materiel']
       }
     ]);
   });
@@ -52,7 +52,7 @@ describe('structures inclusion transfer', (): void => {
         }),
         source: 'Hubik',
         date_maj: new Date('2022-06-02').toISOString(),
-        services: Services([Service.AccederADuMateriel]),
+        services: Services([Service.AccesInternetEtMaterielInformatique]),
         group: '5qs4g789s4dh98d4h8s5r44h5sd'
       }
     ];
@@ -70,7 +70,7 @@ describe('structures inclusion transfer', (): void => {
         nom: 'Anonymal',
         siret: '43493312300029',
         source: 'Hubik',
-        thematiques: ['numerique', 'numerique--acceder-a-du-materiel'],
+        thematiques: ['numerique', 'numerique--acceder-a-une-connexion-internet', 'numerique--acceder-a-du-materiel'],
         group: '5qs4g789s4dh98d4h8s5r44h5sd'
       }
     ]);
@@ -89,7 +89,7 @@ describe('structures inclusion transfer', (): void => {
         }),
         source: 'Hubik',
         date_maj: new Date('2022-06-02').toISOString(),
-        services: Services([Service.AccederADuMateriel]),
+        services: Services([Service.AccesInternetEtMaterielInformatique]),
         group: '5qs4g789s4dh98d4h8s5r44h5sd',
         mergedIds: ['e4c9a4fc-a456-5645-4844-65d461ace651', '4acf5a15-44fa-9894-8465-f489f4ac984e']
       }
@@ -108,7 +108,7 @@ describe('structures inclusion transfer', (): void => {
         nom: 'Anonymal',
         siret: '43493312300029',
         source: 'Hubik',
-        thematiques: ['numerique', 'numerique--acceder-a-du-materiel'],
+        thematiques: ['numerique', 'numerique--acceder-a-une-connexion-internet', 'numerique--acceder-a-du-materiel'],
         group: '5qs4g789s4dh98d4h8s5r44h5sd',
         mergedIds: ['e4c9a4fc-a456-5645-4844-65d461ace651', '4acf5a15-44fa-9894-8465-f489f4ac984e']
       }

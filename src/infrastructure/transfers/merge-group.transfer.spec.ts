@@ -17,7 +17,7 @@ describe('merge group transfer', (): void => {
         }),
         source: 'Hubik',
         date_maj: new Date('2022-06-02').toISOString(),
-        services: Services([Service.AccederADuMateriel]),
+        services: Services([Service.AccesInternetEtMaterielInformatique]),
         hash: '08433db27ca44fffae7e47fc81ca33ad',
         sourceId: Id('structure-1'),
         group: 'dcc68ccf2633cb238db21d87ddb9607309d34e091de992b63766c26886f764de',
@@ -40,7 +40,7 @@ describe('merge group transfer', (): void => {
           id: '75535fc4-981d-4320-9548-494ea6e4e7f7',
           nom: 'Anonymal',
           pivot: '43493312300029',
-          services: 'Accéder à du matériel',
+          services: 'Accès internet et matériel informatique',
           source: 'Hubik'
         }
       }
