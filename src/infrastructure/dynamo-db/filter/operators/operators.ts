@@ -1,3 +1,4 @@
+import { containsFilterExpression } from './contains.operator';
 import { equalFilterExpression } from './equals.operator';
 import { existsFilterExpression } from './attribute-exists.operator';
 import { notExistsFilterExpression } from './attribute-not-exists.operator';
@@ -6,7 +7,7 @@ import { notEqualFilterExpression } from './not-equals.operator';
 
 export type OperatorFilterExpression = (left: string, right: string) => string;
 
-export type Comparison = 'eq' | 'neq' | 'exists' | 'notExists' | 'beginsWith';
+export type Comparison = 'contains' | 'eq' | 'neq' | 'exists' | 'notExists' | 'beginsWith';
 
 export type OperatorWithValue<T, TAttribute extends keyof T = keyof T> = {
   comparison: Comparison;
@@ -14,6 +15,7 @@ export type OperatorWithValue<T, TAttribute extends keyof T = keyof T> = {
 };
 
 export const operatorFilterExpression: Record<Comparison, OperatorFilterExpression> = {
+  contains: containsFilterExpression,
   eq: equalFilterExpression,
   neq: notEqualFilterExpression,
   exists: existsFilterExpression,
