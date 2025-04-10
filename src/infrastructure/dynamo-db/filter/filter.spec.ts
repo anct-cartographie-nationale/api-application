@@ -3,7 +3,7 @@ import { LieuInclusionNumeriqueStorage } from '../../storage';
 import { and, or } from './abstract-syntax-tree';
 import { attribute } from './attribute';
 import { QueryCommandExpression, filter } from './filter';
-import { attributeExists, attributeNotExists, beginWith, equals } from './operators';
+import { attributeExists, attributeNotExists, beginWith, equals, contains } from './operators';
 import { notEquals } from './operators/not-equals.operator';
 
 describe('filter configuration for dynamodb scan command', (): void => {
@@ -129,6 +129,16 @@ describe('filter configuration for dynamodb scan command', (): void => {
       ExpressionAttributeNames: { '#0': 'source' },
       ExpressionAttributeValues: { ':0': 'Angers' },
       FilterExpression: '#0 = :0'
+    });
+  });
+
+  it('should create a filter for a field that contains a substring', (): void => {
+    const filterSource: QueryCommandExpression = filter<LieuInclusionNumeriqueStorage>(attribute('source', contains('gers')));
+
+    expect(filterSource).toStrictEqual({
+      ExpressionAttributeNames: { '#0': 'source' },
+      ExpressionAttributeValues: { ':0': 'gers' },
+      FilterExpression: 'contains(#0, :0)'
     });
   });
 

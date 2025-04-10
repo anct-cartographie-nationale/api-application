@@ -23,6 +23,18 @@ describe('filter configuration for dynamodb scan command', (): void => {
     });
   });
 
+  it('should generate filter from JSON:API query string with contains from query string set to gers', (): void => {
+    const queryCommandExpression: QueryCommandExpression = queryStringFilter('source[contains]=gers');
+
+    expect(queryCommandExpression).toStrictEqual({
+      ExpressionAttributeNames: { '#00': 'source' },
+      ExpressionAttributeValues: {
+        ':00': 'gers'
+      },
+      FilterExpression: `contains(#00, :00)`
+    });
+  });
+
   it('should generate filter from JSON:API query string with exists from query string set to false', (): void => {
     const queryCommandExpression: QueryCommandExpression = queryStringFilter('source[exists]=false');
 
